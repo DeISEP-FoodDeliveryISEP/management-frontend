@@ -1,12 +1,19 @@
 import './App.css';
-import { Routes, Route, Outlet, Link } from "react-router-dom";
+import { Routes, Route, Outlet } from "react-router-dom";
 import Login from "./pages/Login.js";
 import Home from "./pages/Home.js";
 import NoMatch from "./pages/NoMatch";
+import { Client as Styletron } from 'styletron-engine-atomic';
+import { Provider as StyletronProvider } from 'styletron-react';
+import { LightTheme, BaseProvider } from 'baseui';
+import { NavBar } from './components/NavBar';
+const engine = new Styletron();
 
 function App() {
   return (
     <div>
+      <StyletronProvider value={engine}>
+      <BaseProvider theme={LightTheme}></BaseProvider>
       {/* Routes nest inside one another. Nested route paths build upon
             parent route paths, and nested route elements render inside
             parent route elements. See the note about <Outlet> below. */}
@@ -21,6 +28,7 @@ function App() {
         </Route>
         <Route path="/login" element={<Login />} />
       </Routes>
+      </StyletronProvider>
     </div>
   );
 }
@@ -28,17 +36,7 @@ function App() {
 function Layout() {
   return (
     <div>
-      {/* A "layout route" is a good place to put markup you want to
-          share across all the pages on your site, like navigation. */}
-      <nav>
-        <ul>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-        </ul>
-      </nav>
-
-      <hr />
+      <NavBar></NavBar>
 
       {/* An <Outlet> renders whatever child route is currently active,
           so you can think about this <Outlet> as a placeholder for
