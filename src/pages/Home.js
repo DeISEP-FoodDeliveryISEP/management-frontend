@@ -11,7 +11,7 @@ import {
 import { Button } from "baseui/button";
 
 
-function MenuItemCard({title, thumbnail, description, buttonText, buttonLink}) {
+function PortalCard({title, thumbnail, description, buttonText, buttonLink}) {
   return (<Card
       title={title}
     >
@@ -39,43 +39,35 @@ export default function Home() {
         style={{marginBottom: "2rem"}}
       >This is the DeISEP management system portal. Here, you can customize, edit menu items, and also manage customer orders.</div>
       <div className="card-container">
-        <MenuItemCard
+        <PortalCard
           title="Menu Items"
           buttonLink="menu-items"
           description="Add, edit, or delete items (dishes) of the menu."
           buttonText="Go"
           >
-        </MenuItemCard>
-        <MenuItemCard
+        </PortalCard>
+        <PortalCard
           title="Set Meals"
           buttonLink="set-meals"
           description="Set meals are menu item sets that can group different menu items. Add, edit or delete set meals."
           buttonText="Go"
           >
-        </MenuItemCard>
-        <MenuItemCard
+        </PortalCard>
+        <PortalCard
           title="Category Management"
           buttonLink="edit-categories"
           description="Edit and add categories for menu items."
           buttonText="Go"
           >
-        </MenuItemCard>
-        <MenuItemCard
+        </PortalCard>
+        <PortalCard
           title="Customer Orders"
           buttonLink="customer-orders"
           description="View customer orders and change status."
           buttonText="Go"
           >
-        </MenuItemCard>
+        </PortalCard>
       </div>
-      
-      {/* <ul>
-        
-        <li><Link to="/menu-items">Menu Items</Link></li>
-        <li><Link to="/menu-items">Set Meals</Link></li>
-        <li><Link to="/menu-items">Edit Categories</Link></li>
-        <li><Link to="/menu-items">Customer Orders</Link></li>
-      </ul> */}
     </div>
   );
 }

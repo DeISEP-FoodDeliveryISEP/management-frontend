@@ -11,6 +11,9 @@ import SideBar from './components/SideBar';
 import Login from "./pages/Login.js";
 import Home from "./pages/Home.js";
 import MenuItems from "./pages/MenuItems";
+import SetMeals from "./pages/SetMeals";
+import EditCategories from "./pages/EditCategories";
+import CustomerOrders from "./pages/CustomerOrders";
 import NoMatch from "./pages/NoMatch";
 const engine = new Styletron();
 
@@ -27,6 +30,9 @@ function App() {
           <Route path="/" element={<HomeLayout />}>
             <Route index element={<Home />} />
             <Route path="/menu-items" element={<MenuItems />}/>
+            <Route path="/set-meals" element={<SetMeals />}/>
+            <Route path="/edit-categories" element={<EditCategories />}/>
+            <Route path="/customer-orders" element={<CustomerOrders />}/>
           </Route>
 
           {/* Using path="*"" means "match anything", so this route
