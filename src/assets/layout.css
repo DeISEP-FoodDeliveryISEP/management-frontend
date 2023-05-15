@@ -1,17 +1,36 @@
 #root {
     height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .home-container {
     display: flex;
     justify-content: center;
+    flex-grow: 1;
 }
 .home-layout {
     display: flex;
     width: 1280px;
+    align-items: stretch;
 }
 
 .sidebar {
     margin-top: 64px;
     width: 196px;
+}
+
+.content-container {
+    height: 100%;
+    width: 100%;
+    margin-left: 48px;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-column-gap: 2rem;
+    row-gap: 1rem;
 }

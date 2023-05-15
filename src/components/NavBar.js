@@ -1,4 +1,5 @@
 import * as React from "react";
+import '../assets/navbar.css';
 import {
   AppNavBar,
   setItemActive
@@ -9,6 +10,7 @@ import {
   Overflow,
   Upload
 } from "baseui/icon";
+import { Link } from "react-router-dom";
 
 export const NavBar =  () => {
   const [mainItems, setMainItems] = React.useState([
@@ -26,7 +28,7 @@ export const NavBar =  () => {
   ]);
   return (
     <AppNavBar
-      title="DeISEP | Management System"
+      title={<Link to="/" className="logo-link"><div >DeISEP | Management System</div></Link>}
       // mainItems={mainItems}
       // onMainItemSelect={item => {
       //   setMainItems(prev => setItemActive(prev, item));

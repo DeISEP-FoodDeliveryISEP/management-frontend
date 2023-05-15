@@ -1,0 +1,6 @@
+.logo-link {
+    all: unset;
+}
+.logo-link:hover {
+    cursor: pointer;
+}
