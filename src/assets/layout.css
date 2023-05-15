@@ -1,0 +1,17 @@
+#root {
+    height: 100vh;
+}
+
+.home-container {
+    display: flex;
+    justify-content: center;
+}
+.home-layout {
+    display: flex;
+    width: 1280px;
+}
+
+.sidebar {
+    margin-top: 64px;
+    width: 196px;
+}
