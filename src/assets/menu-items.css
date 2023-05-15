@@ -1,0 +1,6 @@
+.menu-items-container {
+    width: 100%;
+    margin-left: 48px;
+    display: flex;
+    flex-direction: column;
+}
