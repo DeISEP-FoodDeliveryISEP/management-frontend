@@ -28,7 +28,7 @@ export const NavBar =  () => {
   ]);
   return (
     <AppNavBar
-      title={<Link to="/" className="logo-link"><div >DeISEP | Management System</div></Link>}
+      title={<Link to="/" className="logo-link"><div ><span style={{color: "#FFD643"}}>De</span>ISEP | Management System</div></Link>}
       // mainItems={mainItems}
       // onMainItemSelect={item => {
       //   setMainItems(prev => setItemActive(prev, item));

@@ -34,7 +34,7 @@ function PortalCard({title, thumbnail, description, buttonText, buttonLink}) {
 export default function Home() {
   return (
     <div className="content-container">
-      <h1>Portal</h1>
+      <h1><span style={{color: "#FFD643"}}>De</span>ISEP Management Portal</h1>
       <div
         style={{marginBottom: "2rem"}}
       >This is the DeISEP management system portal. Here, you can customize, edit menu items, and also manage customer orders.</div>
