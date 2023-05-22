@@ -21,7 +21,7 @@ function App() {
   return (
     <>
       <StyletronProvider value={engine}>
-      <BaseProvider theme={LightTheme}></BaseProvider>
+      <BaseProvider theme={LightTheme}>
       {/* Routes nest inside one another. Nested route paths build upon
             parent route paths, and nested route elements render inside
             parent route elements. See the note about <Outlet> below. */}
@@ -42,6 +42,7 @@ function App() {
         </Route>
         <Route path="/login" element={<Login />} />
       </Routes>
+      </BaseProvider>
       </StyletronProvider>
     </>
   );
