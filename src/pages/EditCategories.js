@@ -129,7 +129,7 @@ export default function EditCategories() {
         <h1>Categories Management</h1>
         <ButtonGroup shape={SHAPE.pill}>
         <Button>+ New Menu Item Category</Button>
-        <Button>+ New Set Menu Category</Button>
+        <Button>+ New Set Meals Category</Button>
         </ButtonGroup>
         <CategoryTable />
     </div>
