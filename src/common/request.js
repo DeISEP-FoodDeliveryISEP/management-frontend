@@ -4,6 +4,7 @@ axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8';
 
 export const $axios = axios.create({
   baseURL: "http://localhost:8080",
+  withCredentials: true,
   timeout: 1000000
 });
 
