@@ -8,6 +8,16 @@ import {Avatar} from 'baseui/avatar';
 import {Button, KIND, SIZE} from 'baseui/button';
 import {Tag} from 'baseui/tag';
 import {useStyletron} from 'baseui';
+import {
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalButton,
+} from 'baseui/modal';
+import { FormControl } from 'baseui/form-control';
+import { Input } from 'baseui/input';
+import * as React from 'react';
 
 const DATA1 = {
   "createTime": "2023-05-10 13:59:59",
@@ -124,13 +134,76 @@ function CategoryTable() {
 
 
 export default function EditCategories() {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [categoryName, setCategoryName] = React.useState("");
+  const [order, setOrder] = React.useState("");
+  const [modalTitle, setModalTitle] = React.useState("");
+  const [newCatType, setNewCatType] = React.useState("1");
+
+  function close() {
+    setIsOpen(false);
+    setCategoryName("");
+    setOrder("");
+  }
+
+  function openModal(mode = "menu-item") {
+    setIsOpen(true);
+    if (mode === "menu-item") {
+      setNewCatType("1");
+      setModalTitle("New Menu Item Category");
+    }
+    else {
+      setNewCatType("2");
+      setModalTitle("New Set Meal Category");
+    }
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    const reqBody = {'name': categoryName,'type': newCatType, 'sort': order};
+    alert("Sent request:" + JSON.stringify(reqBody));
+    close();
+  }
+
   return (
     <div className="menu-items-container">
         <h1>Categories Management</h1>
         <ButtonGroup shape={SHAPE.pill}>
-        <Button>+ New Menu Item Category</Button>
-        <Button>+ New Set Meals Category</Button>
+          <Button onClick={() => {openModal("menu-item");}}>+ New Menu Item Category</Button>
+          <Button onClick={() => {openModal("set-meals");}}>+ New Set Meals Category</Button>
         </ButtonGroup>
+
+        <Modal onClose={close} isOpen={isOpen}>
+          <ModalHeader>{modalTitle}</ModalHeader>
+          <form onSubmit={handleSubmit}>
+            <ModalBody>
+            <FormControl
+              label={() => "Category Name"}
+            >
+              <Input
+                value={categoryName}
+                onChange={e => setCategoryName(e.target.value)}
+              />
+            </FormControl>
+            <FormControl
+              label={() => "Order"}
+            >
+              <Input
+                value={order}
+                onChange={e => setOrder(e.target.value)}
+              />
+            </FormControl>
+            </ModalBody>
+            <ModalFooter>
+              <ModalButton kind="tertiary" onClick={close} type="button">
+                Cancel
+              </ModalButton>
+              <ModalButton type="submit">
+                Save
+              </ModalButton>
+            </ModalFooter>
+          </form>
+        </Modal>
         <CategoryTable />
     </div>
   );
