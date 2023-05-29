@@ -5,12 +5,7 @@ import * as React from "react";
 import { Input } from "baseui/input";
 import { Button } from "baseui/button";
 import { useNavigate } from "react-router-dom";
-
-function validate(username, password) {
-    if (username === "admin" && password === "123456")
-        return true;
-    return false;
-}
+import { loginApi } from "../api/login";
 
 export default function Login() {
     const [css] = useStyletron();
@@ -26,16 +21,15 @@ export default function Login() {
         backgroundColor: "black"
     };
 
-    function handleLogin(event) {
-        if (validate(username, password)) {
-            alert("login success");
-            navigate("/");
-        }
-        else {
-            alert("wrong password");
-            console.log('error');
-        }
+    async function handleLogin(event) {
         event.preventDefault();
+        let res = await loginApi({"username": username, "password": password});
+        if (String(res.code) === '1') {// login success
+            localStorage.setItem('userInfo',JSON.stringify(res.data))
+            navigate("/");
+        } else {
+            alert(res.msg);
+        }
     }
     
     return (
