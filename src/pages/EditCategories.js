@@ -19,6 +19,7 @@ import {
 import { FormControl } from 'baseui/form-control';
 import { Input } from 'baseui/input';
 import { getCategoryPage } from '../api/category';
+import { addCategory } from '../api/category';
 
 // temp data
 const DATA1 = {
@@ -130,24 +131,28 @@ export default function EditCategories() {
   const [data, setData] = React.useState(Array.from(new Array(5)).fill(DATA1));
   
   React.useEffect(() => {
-     getCategoryPage({'page': 1, 'pageSize': 100}).then(res => {
-        if (String(res.code) === '1') {
-          setData(res.data.records)
-          setIsLoaded(true)
-          // this.counts = Number(res.data.total)
-        } else {
-          alert(res.msg || 'Action failed')
-        }
-      }).catch(err => {
-        alert('Error occured.')
-        console.log(err)
-      })
+     initPage()
   }, [])
   
   function close() {
     setIsOpen(false);
     setCategoryName("");
     setOrder("");
+  }
+
+  function initPage() {
+    getCategoryPage({'page': 1, 'pageSize': 100}).then(res => {
+      if (String(res.code) === '1') {
+        setData(res.data.records)
+        setIsLoaded(true)
+        // this.counts = Number(res.data.total)
+      } else {
+        alert(res.msg || 'Action failed')
+      }
+    }).catch(err => {
+      alert('Error occured.')
+      console.log(err)
+    })
   }
 
   function openModal(mode = "menu-item") {
@@ -162,10 +167,22 @@ export default function EditCategories() {
     }
   }
 
-  function handleSubmit(event) {
+  async function handleAddSubmit(event) {
     event.preventDefault();
     const reqBody = {'name': categoryName,'type': newCatType, 'sort': order};
-    alert("Sent request:" + JSON.stringify(reqBody));
+    addCategory(reqBody).then(res => {
+      console.log(res)
+      if (res.code === 1) {
+        alert('add success!')
+        initPage()
+      } else {
+        alert('add error')
+        console.log(res.msg || 'action failed')
+      }
+    }).catch(err => {
+      alert('request error')
+      console.log('request error: ' + err)
+    })
     close();
   }
 
@@ -181,7 +198,7 @@ export default function EditCategories() {
         {/* Modal */}
         <Modal onClose={close} isOpen={isOpen}>
           <ModalHeader>{modalTitle}</ModalHeader>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleAddSubmit}>
             <ModalBody>
             <FormControl
               label={() => "Category Name"}
