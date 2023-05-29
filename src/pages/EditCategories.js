@@ -1,3 +1,4 @@
+import * as React from 'react';
 import "../assets/menu-items.css";
 import { ButtonGroup, SHAPE } from "baseui/button-group";
 import {
@@ -17,8 +18,9 @@ import {
 } from 'baseui/modal';
 import { FormControl } from 'baseui/form-control';
 import { Input } from 'baseui/input';
-import * as React from 'react';
+import { getCategoryPage } from '../api/category';
 
+// temp data
 const DATA1 = {
   "createTime": "2023-05-10 13:59:59",
   "createUser": 0,
@@ -29,21 +31,6 @@ const DATA1 = {
   "updateTime": "2023-05-17 13:59:59",
   "updateUser": 0
 };
-
-const DATA2 = {
-  "createTime": "2023-05-10 13:59:59",
-  "createUser": 0,
-  "id": 1,
-  "name": "South Asian",
-  "sort": 2,
-  "type": 2,
-  "updateTime": "2023-05-17 13:59:59",
-  "updateUser": 0
-};
-
-// MOCK DATA
-const DISHDATA = Array.from(new Array(5)).fill(DATA1);
-DISHDATA.push(DATA2);
 
 function CategoryCell({category}) {
   const [css, theme] = useStyletron();
@@ -97,11 +84,11 @@ function DisplayOrderCell({displayOrder}) {
   );
 }
 
-function CategoryTable() {
+function CategoryTable({data}) {
   return (
     <TableBuilder
       overrides={{Root: {style: {maxHeight: '600px'}}}}
-      data={DISHDATA}
+      data={data}
     >
 
       <TableBuilderColumn header="Category Name">
@@ -139,7 +126,24 @@ export default function EditCategories() {
   const [order, setOrder] = React.useState("");
   const [modalTitle, setModalTitle] = React.useState("");
   const [newCatType, setNewCatType] = React.useState("1");
-
+  const [isLoaded, setIsLoaded] = React.useState(false);
+  const [data, setData] = React.useState(Array.from(new Array(5)).fill(DATA1));
+  
+  React.useEffect(() => {
+     getCategoryPage({'page': 1, 'pageSize': 100}).then(res => {
+        if (String(res.code) === '1') {
+          setData(res.data.records)
+          setIsLoaded(true)
+          // this.counts = Number(res.data.total)
+        } else {
+          alert(res.msg || 'Action failed')
+        }
+      }).catch(err => {
+        alert('Error occured.')
+        console.log(err)
+      })
+  }, [])
+  
   function close() {
     setIsOpen(false);
     setCategoryName("");
@@ -172,7 +176,9 @@ export default function EditCategories() {
           <Button onClick={() => {openModal("menu-item");}}>+ New Menu Item Category</Button>
           <Button onClick={() => {openModal("set-meals");}}>+ New Set Meals Category</Button>
         </ButtonGroup>
+        <CategoryTable data={data}/>
 
+        {/* Modal */}
         <Modal onClose={close} isOpen={isOpen}>
           <ModalHeader>{modalTitle}</ModalHeader>
           <form onSubmit={handleSubmit}>
@@ -204,7 +210,6 @@ export default function EditCategories() {
             </ModalFooter>
           </form>
         </Modal>
-        <CategoryTable />
     </div>
   );
 }
