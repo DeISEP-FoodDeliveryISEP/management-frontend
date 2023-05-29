@@ -9,6 +9,14 @@ const SideBar = () => {
   return (
     <Navigation
       items={[
+        {
+          title:
+          <div style={{display: "flex", alignItems: "center"}}>
+            <BiCategory size={18} style={{marginRight: "9px"}}/>
+            Edit Categories
+          </div>,
+          itemId: "/edit-categories"
+        },
         { title:
           <div style={{display: "flex", alignItems: "center"}}>
             <BiFoodMenu size={18} style={{marginRight: "9px"}}/>
@@ -21,14 +29,6 @@ const SideBar = () => {
             Set Meals
           </div>
           , itemId: "/set-meals" },
-        {
-          title:
-          <div style={{display: "flex", alignItems: "center"}}>
-            <BiCategory size={18} style={{marginRight: "9px"}}/>
-            Edit Categories
-          </div>,
-          itemId: "/edit-categories"
-        },
         {
           title:
           <div style={{display: "flex", alignItems: "center"}}>
