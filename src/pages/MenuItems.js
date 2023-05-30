@@ -26,6 +26,7 @@ import { Textarea } from "baseui/textarea";
 import { FormControl } from 'baseui/form-control';
 import { imageUpload } from "../api/menuItems";
 import { $axios } from "../common/request";
+import { addDish } from "../api/menuItems";
 // import {Tag, VARIANT as TAG_VARIANT} from 'baseui/tag';
 
 const DISH = {
@@ -292,6 +293,7 @@ export default function MenuItems() {
   // file upload
   const [fileUploaded, setFileUploaded] = React.useState(false);
   const [imageUrl, setImageUrl] = React.useState("");
+  const [imagePostUrl, setImagePostUrl] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
 
 
@@ -376,6 +378,7 @@ export default function MenuItems() {
           // console.log('response is:', res.data);
           const path = `${$axios.defaults.baseURL}/common/download?name=${res.data}`;
           setImageUrl(path);
+          setImagePostUrl(res.data);
         }
         // fix: use useEffect hack, find solution later
         // setIsUploading(false);
@@ -386,6 +389,34 @@ export default function MenuItems() {
         alert('Error occured.');
         console.log(err);
     });
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const reqBody = {
+      'name': itemName,
+      'price': itemPrice * 100,
+      'code': '',
+      'image': imagePostUrl,
+      'description': itemDescription,
+      'dishFlavors': [].map(obj => ({ ...obj, value: JSON.stringify(obj.value) })),
+      'status': 1,
+      'categoryId': selectValue[0].id
+    };
+    addDish(reqBody).then(res => {
+      console.log(res)
+      if (res.code === 1) {
+        alert('add success!')
+        initPage()
+        close()
+      } else {
+        alert('add error')
+        console.log(res.msg || 'action failed')
+      }
+    }).catch(err => {
+      alert('request error')
+      console.log('request error: ' + err)
+    })
   }
 
   return (
@@ -399,7 +430,6 @@ export default function MenuItems() {
         <MenuItemTable data={data}/>
 
         {/* Add New Item Modal */}
-        <form onSubmit={(e) => {e.preventDefault();}} >
         <Modal 
           onClose={close} isOpen={isOpen}
           overrides={{
@@ -414,7 +444,7 @@ export default function MenuItems() {
           }}
         >
           <ModalHeader>Add New Item</ModalHeader>
-            <form style={{flex: '1 1', display: "flex", flexDirection: "column"}} onSubmit={(e) => {e.preventDefault();}}>
+            <form style={{flex: '1 1', display: "flex", flexDirection: "column"}} onSubmit={handleSubmit}>
               <ModalBody style={{flex: '1 1 0'}}>
                 <div style={{display: "flex"}}>
                   <div style={{flex: "3"}}>
@@ -540,7 +570,6 @@ export default function MenuItems() {
               </ModalFooter>
             </form>
         </Modal>
-        </form>
     </div>
   );
 }
