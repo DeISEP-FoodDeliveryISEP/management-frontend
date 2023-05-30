@@ -82,3 +82,14 @@ export const dishStatusByStatus = (params) => {
     params: { ids: params.id }
   })
 }
+
+export const imageUpload = (file) => {
+  return $axios({
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+    url: '/common/upload',
+    method: 'post',
+    data: {file: file}
+  })
+}
