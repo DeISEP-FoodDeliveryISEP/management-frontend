@@ -15,11 +15,14 @@ import {
   ModalBody,
   ModalFooter,
   ModalButton,
+  ROLE
 } from 'baseui/modal';
 import { FormControl } from 'baseui/form-control';
 import { Input } from 'baseui/input';
-import { getCategoryPage } from '../api/category';
-import { addCategory } from '../api/category';
+import { deleCategory, getCategoryPage, addCategory, editCategory } from '../api/category';
+
+const ADD = 1;
+const EDIT = 2;
 
 // temp data
 const DATA1 = {
@@ -85,7 +88,44 @@ function DisplayOrderCell({displayOrder}) {
   );
 }
 
-function CategoryTable({data}) {
+function ButtonsCell({data, editCallback, deleteCallback}) {
+  const [css, theme] = useStyletron();
+
+  return (
+    <div className={css({display: 'flex', alignItems: 'center'})}>
+          <Button
+            kind={KIND.secondary}
+            size={SIZE.mini}
+            overrides={{
+              BaseButton: {
+                style: {
+                  marginLeft: 0,
+                },
+              },
+            }}
+            onClick={() => editCallback(data)}
+          >
+            Edit
+          </Button>
+          <Button
+            kind={KIND.secondary}
+            size={SIZE.mini}
+            overrides={{
+              BaseButton: {
+                style: {
+                  marginLeft: theme.sizing.scale100,
+                },
+              },
+            }}
+            onClick={() => deleteCallback(data)}
+          >
+            Delete
+          </Button>
+    </div>
+  );
+}
+
+function CategoryTable({data, editCallback, deleteCallback}) {
   return (
     <TableBuilder
       overrides={{Root: {style: {maxHeight: '600px'}}}}
@@ -116,6 +156,10 @@ function CategoryTable({data}) {
         {row => <DisplayOrderCell displayOrder={row.sort} />}
       </TableBuilderColumn>
 
+      <TableBuilderColumn header="Actions">
+        {row => <ButtonsCell data={row} editCallback={editCallback} deleteCallback={deleteCallback} />}
+      </TableBuilderColumn>
+
     </TableBuilder>
   );
 }
@@ -129,6 +173,8 @@ export default function EditCategories() {
   const [newCatType, setNewCatType] = React.useState("1");
   const [isLoaded, setIsLoaded] = React.useState(false);
   const [data, setData] = React.useState(Array.from(new Array(5)).fill(DATA1));
+  const [addOrEdit, setAddOrEdit] = React.useState(ADD); // 1 for add, 2 for edit
+  const [editID, setEditID] = React.useState(0);
   
   React.useEffect(() => {
      initPage()
@@ -157,33 +203,81 @@ export default function EditCategories() {
 
   function openModal(mode = "menu-item") {
     setIsOpen(true);
-    if (mode === "menu-item") {
-      setNewCatType("1");
-      setModalTitle("New Menu Item Category");
+    if (addOrEdit === ADD) {
+      if (mode === "menu-item") {
+        setNewCatType("1");
+        setModalTitle("New Menu Item Category");
+      }
+      else {
+        setNewCatType("2");
+        setModalTitle("New Set Meal Category");
+      }
     }
     else {
-      setNewCatType("2");
-      setModalTitle("New Set Meal Category");
+      setModalTitle("Edit Category");
     }
   }
 
-  async function handleAddSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    const reqBody = {'name': categoryName,'type': newCatType, 'sort': order};
-    addCategory(reqBody).then(res => {
-      console.log(res)
-      if (res.code === 1) {
-        alert('add success!')
-        initPage()
-      } else {
-        alert('add error')
-        console.log(res.msg || 'action failed')
-      }
-    }).catch(err => {
-      alert('request error')
-      console.log('request error: ' + err)
-    })
-    close();
+    if (addOrEdit === ADD) {
+      const reqBody = {'name': categoryName,'type': newCatType, 'sort': order};
+      addCategory(reqBody).then(res => {
+        console.log(res)
+        if (res.code === 1) {
+          alert('add success!')
+          initPage()
+          close()
+        } else {
+          alert('add error')
+          console.log(res.msg || 'action failed')
+        }
+      }).catch(err => {
+        alert('request error')
+        console.log('request error: ' + err)
+      })
+    }
+    else if (addOrEdit === EDIT) {
+      const reqBody = {'id': editID, 'name': categoryName, 'sort': order};
+      editCategory(reqBody).then(res => {
+        if (res.code === 1) {
+          alert('edit success!')
+          close()
+          initPage()
+        } else {
+          alert('add error')
+          console.log(res.msg || 'action failed')
+        }
+      }).catch(err => {
+        alert('request error')
+        console.log('request error: ' + err)
+      });
+    }
+  }
+
+  function handleDelete(data) {
+    const deleteId = data.id;
+    if (window.confirm("This action deletes the category, proceed?")) {
+      deleCategory(deleteId).then(res => {
+        if (res.code === 1) {
+          alert('Delete success!')
+          initPage()
+        } else {
+          alert("delete failed, message: " + res.msg)
+        }
+      }).catch(err => {
+        alert('Request failed: ' + err)
+      })
+    }
+  }
+  
+  function handleEdit(data) {
+    console.log('edit:', data);
+    setAddOrEdit(EDIT);
+    setEditID(data.id);
+    setCategoryName(data.name);
+    setOrder(data.sort);
+    setIsOpen(true);
   }
 
   return (
@@ -193,12 +287,12 @@ export default function EditCategories() {
           <Button onClick={() => {openModal("menu-item");}}>+ New Menu Item Category</Button>
           <Button onClick={() => {openModal("set-meals");}}>+ New Set Meals Category</Button>
         </ButtonGroup>
-        <CategoryTable data={data}/>
+        <CategoryTable data={data} editCallback={handleEdit} deleteCallback={handleDelete}/>
 
-        {/* Modal */}
+        {/* Add New Category Modal */}
         <Modal onClose={close} isOpen={isOpen}>
           <ModalHeader>{modalTitle}</ModalHeader>
-          <form onSubmit={handleAddSubmit}>
+          <form onSubmit={handleSubmit}>
             <ModalBody>
             <FormControl
               label={() => "Category Name"}
