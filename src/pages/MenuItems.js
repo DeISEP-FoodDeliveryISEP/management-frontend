@@ -87,7 +87,10 @@ function DishContentCell({src, title, description}) {
   const [css, theme] = useStyletron();
   return (
     <div className={css({display: 'flex', alignItems: 'center'})}>
-      <Avatar size="48px" src={src} />
+      <Avatar 
+        size="48px" src={src}
+        name={`item`}
+      />
       <div
         className={css({
           paddingLeft: theme.sizing.scale550,
@@ -236,7 +239,7 @@ function MenuItemTable({data, editCallback = () => {}, deleteCallback = () => {}
       <TableBuilderColumn header="Item">
         {row => (
           <DishContentCell
-            src={row.image}
+            src={`${$axios.defaults.baseURL}/common/download?name=${row.image}`}
             title={row.name}
             description={row.description}
           />
