@@ -8,7 +8,6 @@ import {
 } from 'baseui/table-semantic';
 import {Avatar} from 'baseui/avatar';
 import {Button, KIND, SIZE} from 'baseui/button';
-import {Tag} from 'baseui/tag';
 import {useStyletron} from 'baseui';
 import { getDishPage } from "../api/menuItems";
 import { getCategoryList } from "../api/menuItems";
@@ -27,6 +26,7 @@ import { Textarea } from "baseui/textarea";
 import { FormControl } from 'baseui/form-control';
 import { imageUpload } from "../api/menuItems";
 import { $axios } from "../common/request";
+// import {Tag, VARIANT as TAG_VARIANT} from 'baseui/tag';
 
 const DISH = {
     "categoryId": 0,
@@ -454,6 +454,21 @@ export default function MenuItems() {
                     />
                   </FormControl>
                 </div>
+
+                {/* <div>
+                  <FormControl
+                    label={() => "Flavors"}
+                  >
+                    <div style={{display: "flex"}}>
+                      <div style={{flex: "1"}}>
+                          <Input />
+                      </div>
+                      <div style={{flex: "3", marginLeft: theme.sizing.scale800}}>
+                        <Input />
+                      </div>
+                    </div>
+                  </FormControl>
+                </div> */}
 
                 <div>
                   <FormControl
