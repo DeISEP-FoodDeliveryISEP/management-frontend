@@ -201,21 +201,19 @@ export default function EditCategories() {
     })
   }
 
-  function openModal(mode = "menu-item") {
-    setIsOpen(true);
-    if (addOrEdit === ADD) {
-      if (mode === "menu-item") {
-        setNewCatType("1");
-        setModalTitle("New Menu Item Category");
-      }
-      else {
-        setNewCatType("2");
-        setModalTitle("New Set Meal Category");
-      }
+  function openModal(mode) {
+    if (mode === "menu-item") {
+      setNewCatType("1");
+      setModalTitle("New Menu Item Category");
+    }
+    else if (mode === "set-meals"){
+      setNewCatType("2");
+      setModalTitle("New Set Meal Category");
     }
     else {
       setModalTitle("Edit Category");
     }
+    setIsOpen(true);
   }
 
   async function handleSubmit(event) {
@@ -273,19 +271,19 @@ export default function EditCategories() {
   
   function handleEdit(data) {
     console.log('edit:', data);
-    setAddOrEdit(EDIT);
+    setAddOrEdit(() => EDIT);
     setEditID(data.id);
     setCategoryName(data.name);
     setOrder(data.sort);
-    setIsOpen(true);
+    openModal();
   }
 
   return (
     <div className="menu-items-container">
         <h1>Categories Management</h1>
         <ButtonGroup shape={SHAPE.pill}>
-          <Button onClick={() => {openModal("menu-item");}}>+ New Menu Item Category</Button>
-          <Button onClick={() => {openModal("set-meals");}}>+ New Set Meals Category</Button>
+          <Button onClick={() => {setAddOrEdit(() => ADD); openModal("menu-item");}}>+ New Menu Item Category</Button>
+          <Button onClick={() => {setAddOrEdit(() => ADD); openModal("set-meals");}}>+ New Set Meals Category</Button>
         </ButtonGroup>
         <CategoryTable data={data} editCallback={handleEdit} deleteCallback={handleDelete}/>
 
