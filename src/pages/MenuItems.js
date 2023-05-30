@@ -1,4 +1,6 @@
 import "../assets/menu-items.css";
+
+import * as React from 'react';
 import { ButtonGroup, SHAPE } from "baseui/button-group";
 import {
   TableBuilder,
@@ -8,6 +10,8 @@ import {Avatar} from 'baseui/avatar';
 import {Button, KIND, SIZE} from 'baseui/button';
 import {Tag} from 'baseui/tag';
 import {useStyletron} from 'baseui';
+import { getDishPage } from "../api/menuItems";
+import {Checkbox, STYLE_TYPE} from 'baseui/checkbox';
 
 const DISH = {
     "categoryId": 0,
@@ -51,8 +55,6 @@ const DISH = {
     "updateUser": 0
 };
 
-const DISHDATA = Array.from(new Array(20)).fill(DISH);
-
 function DishContentCell({src, title, description}) {
   const [css, theme] = useStyletron();
   return (
@@ -79,7 +81,8 @@ function DishContentCell({src, title, description}) {
             marginTop: '4px',
           })}
         >
-          {description}
+          {description.slice(0,15)}
+          {description.length > 15 ? "..." : ""}
         </p>
       </div>
     </div>
@@ -96,7 +99,7 @@ function PriceCell({value, delta}) {
         {new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: 'EUR',
-        }).format(value)}
+        }).format(value/100)}
       </span>
     </div>
   );
@@ -128,27 +131,79 @@ function LastEditedDateCell({date}) {
   );
 }
 
+function ButtonsCell({data, editCallback, deleteCallback}) {
+  const [css, theme] = useStyletron();
 
-function FlavorsCell({flavors}) {
-  const [css] = useStyletron();
   return (
     <div className={css({display: 'flex', alignItems: 'center'})}>
-      {flavors.map(flavor => {
-        return (
-          <Tag key={flavor.name} closeable={false}>
-            {flavor.name}
-          </Tag>
-        );
-      })}
+          <Button
+            kind={KIND.secondary}
+            size={SIZE.mini}
+            overrides={{
+              BaseButton: {
+                style: {
+                  marginLeft: 0,
+                },
+              },
+            }}
+            onClick={() => editCallback(data)}
+          >
+            Edit
+          </Button>
+          <Button
+            kind={KIND.secondary}
+            size={SIZE.mini}
+            overrides={{
+              BaseButton: {
+                style: {
+                  marginLeft: theme.sizing.scale100,
+                },
+              },
+            }}
+            onClick={() => deleteCallback(data)}
+          >
+            Delete
+          </Button>
     </div>
   );
 }
 
-function MenuItemTable() {
+function StatusCell({status}) {
+  const [localStatus, setLocalStatus] = React.useState(status === 1);
+
+  return (
+    <Checkbox
+        checked={localStatus}
+        onChange={e => {
+          const val = e.currentTarget.checked;
+          setLocalStatus(val);
+        }}
+        checkmarkType={STYLE_TYPE.toggle_round}
+      />
+  );
+}
+
+
+// function FlavorsCell({flavors}) {
+//   const [css] = useStyletron();
+//   return (
+//     <div className={css({display: 'flex', alignItems: 'center'})}>
+//       {flavors.map(flavor => {
+//         return (
+//           <Tag key={flavor.name} closeable={false}>
+//             {flavor.name}
+//           </Tag>
+//         );
+//       })}
+//     </div>
+//   );
+// }
+
+function MenuItemTable({data, editCallback = () => {}, deleteCallback = () => {}}) {
   return (
     <TableBuilder
       overrides={{Root: {style: {maxHeight: '600px'}}}}
-      data={DISHDATA}
+      data={data}
     >
       <TableBuilderColumn header="Item">
         {row => (
@@ -172,36 +227,60 @@ function MenuItemTable() {
         {row => <PriceCell value={row.price} />}
       </TableBuilderColumn>
 
-      <TableBuilderColumn header="Flavors">
+      {/* <TableBuilderColumn header="Flavors">
         {row => <FlavorsCell flavors={row.flavors} />}
-      </TableBuilderColumn>
+      </TableBuilderColumn> */}
 
       <TableBuilderColumn header="Last Edited">
         {row => <LastEditedDateCell date={row.updateTime} />}
       </TableBuilderColumn>
 
       <TableBuilderColumn header="Status">
-        {row => row.status ? "activated" : "deactivated"}
+        {row => <StatusCell status={row.status} />}
+        {/* {row => row.status ? "activated" : "deactivated"} */}
       </TableBuilderColumn>
 
-      {/* <TableBuilderColumn header="Buttons">
-        {row => <ButtonsCell labels={row.list} />}
-      </TableBuilderColumn> */}
+      <TableBuilderColumn header="Actions">
+        {row => <ButtonsCell data={row} editCallback={editCallback} deleteCallback={deleteCallback} />}
+      </TableBuilderColumn>
+
     </TableBuilder>
   );
 }
 
 
 export default function MenuItems() {
+  const [data, setData] = React.useState(Array.from(new Array(5)).fill(DISH));
+  const [isLoaded, setIsLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+     initPage()
+  }, [])
+
+  function initPage() {
+    getDishPage({'page': 1, 'pageSize': 100}).then(res => {
+      if (String(res.code) === '1') {
+        setData(res.data.records)
+        setIsLoaded(true)
+        // this.counts = Number(res.data.total)
+      } else {
+        alert(res.msg || 'Action failed')
+      }
+    }).catch(err => {
+      alert('Error occured.')
+      console.log(err)
+    })
+  }
+
   return (
     <div className="menu-items-container">
         <h1>Menu Items Management</h1>
         <ButtonGroup shape={SHAPE.pill}>
-        <Button>+ New</Button>
-        <Button>Edit</Button>
-        <Button>Delete</Button>
+        <Button>+ New Menu Item</Button>
+        {/* <Button>Edit</Button>
+        <Button>Delete</Button> */}
         </ButtonGroup>
-        <MenuItemTable />
+        <MenuItemTable data={data}/>
     </div>
   );
 }
