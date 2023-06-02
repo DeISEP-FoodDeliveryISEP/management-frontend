@@ -9,8 +9,7 @@ import {
 import {Avatar} from 'baseui/avatar';
 import {Button, KIND, SIZE} from 'baseui/button';
 import {useStyletron} from 'baseui';
-import { getDishPage } from "../api/menuItems";
-import { getCategoryList } from "../api/menuItems";
+import { getDishPage, addDish, deleteDish, getCategoryList, imageUpload, dishStatusByStatus } from "../api/menuItems";
 import {Checkbox, STYLE_TYPE} from 'baseui/checkbox';
 import { Select } from "baseui/select";
 import {
@@ -24,9 +23,7 @@ import { FileUploader } from "baseui/file-uploader";
 import { Input } from 'baseui/input';
 import { Textarea } from "baseui/textarea";
 import { FormControl } from 'baseui/form-control';
-import { imageUpload } from "../api/menuItems";
 import { $axios } from "../common/request";
-import { addDish } from "../api/menuItems";
 // import {Tag, VARIANT as TAG_VARIANT} from 'baseui/tag';
 
 const DISH = {
@@ -191,7 +188,7 @@ function ButtonsCell({data, editCallback, deleteCallback}) {
                 },
               },
             }}
-            onClick={() => deleteCallback(data)}
+            onClick={() => deleteCallback(data.id, 'single')}
           >
             Delete
           </Button>
@@ -199,8 +196,8 @@ function ButtonsCell({data, editCallback, deleteCallback}) {
   );
 }
 
-function StatusCell({status}) {
-  const [localStatus, setLocalStatus] = React.useState(status === 1);
+function StatusCell({id, status, reloadCallback}) {
+  const [localStatus, setLocalStatus] = React.useState(status);
 
   return (
     <Checkbox
@@ -208,6 +205,21 @@ function StatusCell({status}) {
         onChange={e => {
           const val = e.currentTarget.checked;
           setLocalStatus(val);
+          const newStatus = val === true ? 1 : 0;
+          dishStatusByStatus({id: id, status: newStatus})
+            .then((res)=> {
+              if (res.code === 1) {
+                alert('status change success');
+                reloadCallback();
+              }
+              else {
+                alert('server side error');
+                console.error(res.msg);
+              }
+            }).catch(err => {
+              alert('request error:' + err)
+            })
+          reloadCallback();
         }}
         checkmarkType={STYLE_TYPE.toggle_round}
       />
@@ -230,7 +242,7 @@ function StatusCell({status}) {
 //   );
 // }
 
-function MenuItemTable({data, editCallback = () => {}, deleteCallback = () => {}}) {
+function MenuItemTable({data, editCallback = () => {}, deleteCallback = () => {}, reloadCallback = () => {}}) {
   return (
     <TableBuilder
       overrides={{Root: {style: {maxHeight: '600px'}}}}
@@ -267,7 +279,7 @@ function MenuItemTable({data, editCallback = () => {}, deleteCallback = () => {}
       </TableBuilderColumn>
 
       <TableBuilderColumn header="Status">
-        {row => <StatusCell status={row.status} />}
+        {row => <StatusCell id={row.id} status={row.status} reloadCallback={reloadCallback} />}
         {/* {row => row.status ? "activated" : "deactivated"} */}
       </TableBuilderColumn>
 
@@ -298,6 +310,7 @@ export default function MenuItems() {
   const [imageUrl, setImageUrl] = React.useState("");
   const [imagePostUrl, setImagePostUrl] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
+  const [deleteList, setDeleteList] = React.useState([]);
 
 
   React.useEffect(() => {
@@ -394,7 +407,7 @@ export default function MenuItems() {
     });
   }
 
-  async function handleSubmit(event) {
+  function handleSubmit(event) {
     event.preventDefault();
     const reqBody = {
       'name': itemName,
@@ -422,6 +435,20 @@ export default function MenuItems() {
     })
   }
 
+  function handleDelete(deleteId, mode = 'single') {
+    deleteDish(mode === 'batch' ? deleteList.join(',') : deleteId).then(res => {
+      if (res.code === 1) {
+        alert('delete success!')
+        initPage()
+      } else {
+        alert('delete failed.')
+        console.error(res.msg || 'al')
+      }
+    }).catch(err => {
+      console.error('request error: ' + err)
+    })
+  }
+
   return (
     <div className="menu-items-container">
         <h1>Menu Items Management</h1>
@@ -430,7 +457,7 @@ export default function MenuItems() {
         {/* <Button>Edit</Button>
         <Button>Delete</Button> */}
         </ButtonGroup>
-        <MenuItemTable data={data}/>
+        {isLoaded ? <MenuItemTable data={data} deleteCallback={handleDelete} reloadCallback={initPage} /> : <div>Loading...</div>}
 
         {/* Add New Item Modal */}
         <Modal 
@@ -487,21 +514,6 @@ export default function MenuItems() {
                     />
                   </FormControl>
                 </div>
-
-                {/* <div>
-                  <FormControl
-                    label={() => "Flavors"}
-                  >
-                    <div style={{display: "flex"}}>
-                      <div style={{flex: "1"}}>
-                          <Input />
-                      </div>
-                      <div style={{flex: "3", marginLeft: theme.sizing.scale800}}>
-                        <Input />
-                      </div>
-                    </div>
-                  </FormControl>
-                </div> */}
 
                 <div>
                   <FormControl
