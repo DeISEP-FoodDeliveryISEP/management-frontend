@@ -24,7 +24,8 @@ import { Input } from 'baseui/input';
 import { Textarea } from "baseui/textarea";
 import { FormControl } from 'baseui/form-control';
 import { $axios } from "../common/request";
-// import {Tag, VARIANT as TAG_VARIANT} from 'baseui/tag';
+import TagInput from "../components/TagInput";
+import { Plus } from "baseui/icon";
 
 const DISH = {
     "categoryId": 0,
@@ -66,18 +67,6 @@ const DISH = {
     "status": 1,
     "updateTime": "2023-05-10 13:59:59",
     "updateUser": 0
-};
-
-const SUBMITBODY = {
-  'name': '',
-  'id': '',
-  'price': '',
-  'code': '',
-  'image': '',
-  'description': '',
-  'dishFlavors': [],
-  'status': true,
-  'categoryId': ''
 };
 
 function DishContentCell({src, title, description}) {
@@ -165,7 +154,7 @@ function ButtonsCell({data, editCallback, deleteCallback}) {
   return (
     <div className={css({display: 'flex', alignItems: 'center'})}>
           <Button
-            kind={KIND.secondary}
+            
             size={SIZE.mini}
             overrides={{
               BaseButton: {
@@ -227,21 +216,6 @@ function StatusCell({id, status, reloadCallback}) {
 }
 
 
-// function FlavorsCell({flavors}) {
-//   const [css] = useStyletron();
-//   return (
-//     <div className={css({display: 'flex', alignItems: 'center'})}>
-//       {flavors.map(flavor => {
-//         return (
-//           <Tag key={flavor.name} closeable={false}>
-//             {flavor.name}
-//           </Tag>
-//         );
-//       })}
-//     </div>
-//   );
-// }
-
 function MenuItemTable({data, editCallback = () => {}, deleteCallback = () => {}, reloadCallback = () => {}}) {
   return (
     <TableBuilder
@@ -291,6 +265,32 @@ function MenuItemTable({data, editCallback = () => {}, deleteCallback = () => {}
   );
 }
 
+function FlavorInput({flavorName, flavorTags, deleteFlavorCallback, setNameCallback, setTagsCallback}) {
+  
+  return (<div style={{display: "flex"}}>
+    <Input
+      value={flavorName}
+      onChange={e => {setNameCallback(e.target.value)}}
+      placeholder="Flavor name"
+    />
+      <TagInput
+        placeholder="Enter an attribute..."
+        setTagsCallback={setTagsCallback}
+        tags={flavorTags}
+      >
+      </TagInput>
+      <Button size={SIZE.compact} kind={KIND.tertiary}
+        onClick={(event)=> {
+          event.preventDefault();
+          deleteFlavorCallback();
+        }}
+        type="button"
+      >
+        Delete Flavor
+      </Button>
+  </div>);
+}
+
 
 export default function MenuItems() {
   const [css, theme] = useStyletron();
@@ -300,8 +300,9 @@ export default function MenuItems() {
   // modal
   const [isOpen, setIsOpen] = React.useState(false);
   const [itemName, setItemName] = React.useState("");
-  const [itemPrice, setItemPrice] = React.useState(0);
+  const [itemPrice, setItemPrice] = React.useState("");
   const [itemDescription, setItemDescription] = React.useState("");
+  const [flavorList, setFlavorList] = React.useState([]);
   const [selectValue, setSelectValue] = React.useState([]);
   const [selectOptions, setSelectOptions] = React.useState([{"id": 1, "name": "placeholder1"}, {"id": 2, "name": "placeholder2"}]);
   const [isUploading, setIsUploading] = React.useState(false);
@@ -317,9 +318,9 @@ export default function MenuItems() {
      initPage()
   }, [])
 
+  // Modal imageURL hack
   React.useEffect(() => {
     if (imageUrl !== "") {
-      console.log('[useEffect] image url is:', imageUrl);
       setIsUploading(false);
       setFileUploaded(true);
     }
@@ -354,6 +355,8 @@ export default function MenuItems() {
     setErrorMessage("");
     setSelectValue([]);
     setItemName("");
+    setItemPrice("");
+    setFlavorList([]);
   }
 
   function fetchCategoryList() {
@@ -412,10 +415,10 @@ export default function MenuItems() {
     const reqBody = {
       'name': itemName,
       'price': itemPrice * 100,
-      'code': '',
       'image': imagePostUrl,
       'description': itemDescription,
-      'dishFlavors': [].map(obj => ({ ...obj, value: JSON.stringify(obj.value) })),
+      'code': '',
+      'flavors': flavorList.filter(flavor => flavor.name !== '').map(obj => ({ ...obj, value: JSON.stringify(obj.value) })),
       'status': 1,
       'categoryId': selectValue[0].id
     };
@@ -447,6 +450,28 @@ export default function MenuItems() {
     }).catch(err => {
       console.error('request error: ' + err)
     })
+  }
+
+  function addFlavor() {
+    setFlavorList([...flavorList, {'name': '', 'value': []}]);
+  }
+
+  function deleteFlavor(flavorIndex) {
+    setFlavorList(flavorList.filter((flavor, id) => id !== flavorIndex));
+  }
+
+  function setFlavorNameByIndex(flavorIndex, flavorName) {
+    setFlavorList(flavorList.map((flavor, id) => {
+      if (id !== flavorIndex) return flavor;
+      else return {  ...flavor, 'name': flavorName};
+    }));
+  }
+
+  function setFlavorValueByIndex(flavorIndex, flavorValueList) {
+    setFlavorList(flavorList.map((flavor, id) => {
+      if (id !== flavorIndex) return flavor;
+      else return {  ...flavor, 'value': flavorValueList};
+    }));
   }
 
   return (
@@ -512,6 +537,47 @@ export default function MenuItems() {
                       onChange={e => setItemPrice(e.target.value)}
                       type="number"
                     />
+                  </FormControl>
+                </div>
+
+                <div>
+                  <FormControl
+                    label={() => "Item Flavors"}
+                    caption={() => "Add flavor and enter attributes"}
+                  >
+                    <>
+                      {flavorList.map((flavor, currentIndex)=>
+                        (
+                          <FlavorInput
+                            flavorName={flavor['name']}
+                            flavorTags={flavor['value']}
+                            deleteFlavorCallback={()=> {
+                              deleteFlavor(currentIndex);
+                            }}
+                            setNameCallback={(name)=>{
+                              setFlavorNameByIndex(currentIndex, name);
+                            }}
+                            setTagsCallback={(value)=>{
+                              setFlavorValueByIndex(currentIndex, value);
+                            }}
+                            key={currentIndex}
+                          />
+                        )
+                      )}
+                      
+                      <Button
+                        size={SIZE.compact}
+                        kind={KIND.secondary}
+                        type="button"
+                        onClick={(event)=>{
+                          event.preventDefault();
+                          addFlavor();
+                        }}
+                        startEnhancer={()=> <Plus size={18} />}
+                      >
+                        Add New Flavor
+                      </Button>
+                    </>
                   </FormControl>
                 </div>
 
