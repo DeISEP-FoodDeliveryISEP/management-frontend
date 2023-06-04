@@ -269,27 +269,40 @@ function MenuItemTable({data, editCallback = () => {}, deleteCallback = () => {}
 }
 
 function FlavorInput({flavorName, flavorTags, deleteFlavorCallback, setNameCallback, setTagsCallback}) {
-  
-  return (<div style={{display: "flex"}}>
-    <Input
-      value={flavorName}
-      onChange={e => {setNameCallback(e.target.value)}}
-      placeholder="Flavor name"
-    />
+  const [css, theme] = useStyletron();
+  return (<div style={{display: "flex", marginBottom: theme.sizing.scale400}}>
+    <div style={{flex: "2"}}>
+      <Input
+        value={flavorName}
+        onChange={e => {setNameCallback(e.target.value)}}
+        placeholder="Flavor name"
+        
+      />
+    </div>
+    <div style={{flex: "7", marginLeft: theme.sizing.scale400, marginRight: theme.sizing.scale400}}>
       <TagInput
         placeholder="Enter an attribute..."
         setTagsCallback={setTagsCallback}
         tags={flavorTags}
       >
       </TagInput>
+    </div>
+      
       <Button size={SIZE.compact} kind={KIND.tertiary}
         onClick={(event)=> {
           event.preventDefault();
           deleteFlavorCallback();
         }}
         type="button"
+        style={{flex: "1"}}
+        overrides={{
+         BaseButton: {
+          style: ({ $theme }) => ({
+            color: $theme.colors.negative
+         })}
+        }}
       >
-        Delete Flavor
+        Delete
       </Button>
   </div>);
 }
