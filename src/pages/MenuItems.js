@@ -9,7 +9,10 @@ import {
 import {Avatar} from 'baseui/avatar';
 import {Button, KIND, SIZE} from 'baseui/button';
 import {useStyletron} from 'baseui';
-import { getDishPage, addDish, deleteDish, getCategoryList, imageUpload, dishStatusByStatus } from "../api/menuItems";
+import { 
+    getDishPage, addDish, deleteDish, getCategoryList
+    , imageUpload, dishStatusByStatus, queryDishById
+    , editDish } from "../api/menuItems";
 import {Checkbox, STYLE_TYPE} from 'baseui/checkbox';
 import { Select } from "baseui/select";
 import {
@@ -163,7 +166,7 @@ function ButtonsCell({data, editCallback, deleteCallback}) {
                 },
               },
             }}
-            onClick={() => editCallback(data)}
+            onClick={() => editCallback(data.id)}
           >
             Edit
           </Button>
@@ -299,6 +302,7 @@ export default function MenuItems() {
 
   // modal
   const [isOpen, setIsOpen] = React.useState(false);
+  const [modalAction, setModalAction] = React.useState('add'); // add and new
   const [itemName, setItemName] = React.useState("");
   const [itemPrice, setItemPrice] = React.useState("");
   const [itemDescription, setItemDescription] = React.useState("");
@@ -306,10 +310,11 @@ export default function MenuItems() {
   const [selectValue, setSelectValue] = React.useState([]);
   const [selectOptions, setSelectOptions] = React.useState([{"id": 1, "name": "placeholder1"}, {"id": 2, "name": "placeholder2"}]);
   const [isUploading, setIsUploading] = React.useState(false);
+  const [itemId, setItemId] = React.useState('');
   // file upload
   const [fileUploaded, setFileUploaded] = React.useState(false);
   const [imageUrl, setImageUrl] = React.useState("");
-  const [imagePostUrl, setImagePostUrl] = React.useState("");
+  const [imageUploadUrl, setImageUploadUrl] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
   const [deleteList, setDeleteList] = React.useState([]);
 
@@ -344,8 +349,8 @@ export default function MenuItems() {
   // modal functions
   function openModal() {
     fetchCategoryList();
-    setIsOpen(true);
     setErrorMessage("");
+    setIsOpen(true);
   }
 
   function resetForm() {
@@ -357,6 +362,7 @@ export default function MenuItems() {
     setItemPrice("");
     setItemDescription("");
     setFlavorList([]);
+    setModalAction('add');
   }
 
   function close() {
@@ -402,7 +408,7 @@ export default function MenuItems() {
           // console.log('response is:', res.data);
           const path = formatImageLink(res.data);
           setImageUrl(path);
-          setImagePostUrl(res.data);
+          setImageUploadUrl(res.data);
         }
         // fix: use useEffect hack, find solution later
         // setIsUploading(false);
@@ -417,30 +423,50 @@ export default function MenuItems() {
 
   function handleSubmit(event) {
     event.preventDefault();
-    const reqBody = {
+    let reqBody = {
       'name': itemName,
       'price': itemPrice * 100,
-      'image': imagePostUrl,
+      'image': imageUploadUrl,
       'description': itemDescription,
       'code': '',
       'flavors': flavorList.filter(flavor => flavor.name !== '').map(obj => ({ ...obj, value: JSON.stringify(obj.value) })),
-      'status': 1,
       'categoryId': selectValue[0].id
     };
-    addDish(reqBody).then(res => {
-      console.log(res)
-      if (res.code === 1) {
-        alert('add success!')
-        initPage()
-        close()
-      } else {
-        alert('add error')
-        console.log(res.msg || 'action failed')
-      }
-    }).catch(err => {
-      alert('request error')
-      console.log('request error: ' + err)
-    })
+    if (modalAction === 'add') {
+      reqBody['status'] = 1; // set activated if add
+      addDish(reqBody).then(res => {
+        console.log(res)
+        if (res.code === 1) {
+          alert('add success!')
+          initPage()
+          close()
+        } else {
+          alert('add error')
+          console.log(res.msg || 'action failed')
+        }
+      }).catch(err => {
+        alert('request error')
+        console.log('request error: ' + err)
+      })
+    }
+    else {
+      reqBody['id'] = itemId;
+      editDish(reqBody).then(res => {
+        console.log(res)
+        if (res.code === 1) {
+          alert('edit success!')
+          initPage()
+          close()
+        } else {
+          alert('edit error')
+          console.log(res.msg || 'action failed')
+        }
+      }).catch(err => {
+        alert('request error')
+        console.log('request error: ' + err)
+      })
+    }
+    
   }
 
   function handleDelete(deleteId, mode = 'single') {
@@ -479,6 +505,35 @@ export default function MenuItems() {
     }));
   }
 
+  function setEditModal(itemId) {
+    setModalAction('edit');
+    queryDishById(itemId)
+      .then((res)=>{
+        if(res.code === 1) {
+          const {id, name, price, image, description, flavors, categoryId } = res.data;
+          setFileUploaded(true);
+          setImageUploadUrl(image);
+          setImageUrl(formatImageLink(image));
+          setErrorMessage("");
+          setSelectValue([{id: categoryId}]);
+          setItemId(id);
+          setItemName(name);
+          setItemPrice(price/100);
+          setItemDescription(description);
+          setFlavorList(flavors.map(obj =>
+            ({ ...obj, value: JSON.parse(obj.value) })
+          ));
+          openModal();
+        }
+        else {
+          alert(res.msg || 'Action failed');
+        }
+      })
+      .catch(err => {
+        alert('request error:' + err);
+      })
+  }
+
   return (
     <div className="menu-items-container">
         <h1>Menu Items Management</h1>
@@ -487,7 +542,7 @@ export default function MenuItems() {
         {/* <Button>Edit</Button>
         <Button>Delete</Button> */}
         </ButtonGroup>
-        {isLoaded ? <MenuItemTable data={data} deleteCallback={handleDelete} reloadCallback={initPage} /> : <div>Loading...</div>}
+        {isLoaded ? <MenuItemTable data={data} editCallback={setEditModal} deleteCallback={handleDelete} reloadCallback={initPage} /> : <div>Loading...</div>}
 
         {/* Add New Item Modal */}
         <Modal 
@@ -503,7 +558,7 @@ export default function MenuItems() {
           },
           }}
         >
-          <ModalHeader>Add New Item</ModalHeader>
+          <ModalHeader>{modalAction === 'add' ? 'Add New Menu Item' : 'Edit Menu Item'}</ModalHeader>
             <form style={{flex: '1 1', display: "flex", flexDirection: "column"}} onSubmit={handleSubmit}>
               <ModalBody style={{flex: '1 1 0'}}>
                 <div style={{display: "flex"}}>
@@ -525,7 +580,7 @@ export default function MenuItems() {
                         options={selectOptions}
                         labelKey="name"
                         valueKey="id"
-                        onChange={({value}) => setSelectValue(value)}
+                        onChange={({value}) => {console.log(value); setSelectValue(value)}}
                         value={selectValue}
                       />
                     </FormControl>
@@ -589,7 +644,7 @@ export default function MenuItems() {
                 <div>
                   <FormControl
                     label={() => "Item Image"}
-                    caption={() => "Only extensions with png and jpg can be uploaded."}
+                    caption={() => "Only files with extension .png and .jpg can be uploaded."}
                     >
                     { fileUploaded === true ?
                        <Avatar
