@@ -23,9 +23,9 @@ import { FileUploader } from "baseui/file-uploader";
 import { Input } from 'baseui/input';
 import { Textarea } from "baseui/textarea";
 import { FormControl } from 'baseui/form-control';
-import { $axios } from "../common/request";
 import TagInput from "../components/TagInput";
 import { Plus } from "baseui/icon";
+import { formatImageLink } from "../common/utils";
 
 const DISH = {
     "categoryId": 0,
@@ -225,7 +225,7 @@ function MenuItemTable({data, editCallback = () => {}, deleteCallback = () => {}
       <TableBuilderColumn header="Item">
         {row => (
           <DishContentCell
-            src={`${$axios.defaults.baseURL}/common/download?name=${row.image}`}
+            src={formatImageLink(row.image)}
             title={row.name}
             description={row.description}
           />
@@ -348,15 +348,20 @@ export default function MenuItems() {
     setErrorMessage("");
   }
 
-  function close() {
-    setIsOpen(false);
+  function resetForm() {
     setFileUploaded(false);
     setImageUrl("");
     setErrorMessage("");
     setSelectValue([]);
     setItemName("");
     setItemPrice("");
+    setItemDescription("");
     setFlavorList([]);
+  }
+
+  function close() {
+    setIsOpen(false);
+    resetForm();
   }
 
   function fetchCategoryList() {
@@ -395,7 +400,7 @@ export default function MenuItems() {
         }
         else {
           // console.log('response is:', res.data);
-          const path = `${$axios.defaults.baseURL}/common/download?name=${res.data}`;
+          const path = formatImageLink(res.data);
           setImageUrl(path);
           setImagePostUrl(res.data);
         }
