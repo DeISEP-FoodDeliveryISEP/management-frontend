@@ -353,6 +353,8 @@ export default function MenuItems() {
   function resetUpload() {
     setIsUploading(false);
     setFileUploaded(false);
+    setImageUploadUrl("");
+    setImageUrl("");
     setErrorMessage("");
   }
 
@@ -616,6 +618,7 @@ export default function MenuItems() {
                     caption={() => "Only files with extension .png and .jpg can be uploaded."}
                     >
                     { fileUploaded === true ?
+                    <div style={{display: "flex", alignItems: "center"}}>
                        <Avatar
                           overrides={{
                             Avatar: {
@@ -639,6 +642,8 @@ export default function MenuItems() {
                           size="scale4800"
                           src={imageUrl}
                         />
+                        <Button onClick={()=>{resetUpload();}} size={SIZE.compact} kind={KIND.tertiary} type="button" style={{marginLeft: "1rem"}}>Clear Image</Button>
+                      </div>
                       :
                       <FileUploader
                       onCancel={resetUpload}
