@@ -17,7 +17,7 @@ import {
   imageUpload
 } from "../api/common";
 import {
-  getCategoryList
+  getCategoryList, queryDishList
 } from "../api/menuItems";
 import {Checkbox, STYLE_TYPE} from 'baseui/checkbox';
 import { Select } from "baseui/select";
@@ -33,8 +33,13 @@ import { Input } from 'baseui/input';
 import { Textarea } from "baseui/textarea";
 import { FormControl } from 'baseui/form-control';
 import TagInput from "../components/TagInput";
-import { Plus } from "baseui/icon";
+import { Plus, Delete } from "baseui/icon";
 import { formatImageLink } from "../common/utils";
+import {Tabs, Tab, ORIENTATION, FILL} from 'baseui/tabs-motion';
+import {
+  ListItem,
+  ListItemLabel
+} from "baseui/list";
 
 const SET = {
   "categoryId": 0,
@@ -261,16 +266,25 @@ export default function SetMeals() {
   const [data, setData] = React.useState([]);
   const [isLoaded, setIsLoaded] = React.useState(false);
 
-  // modal
+  // set modal
   const [isOpen, setIsOpen] = React.useState(false);
   const [modalAction, setModalAction] = React.useState('add'); // add and new
   const [mealName, setMealName] = React.useState("");
   const [mealPrice, setMealPrice] = React.useState("");
   const [mealDescription, setMealDescription] = React.useState("");
   const [selectValue, setSelectValue] = React.useState([]);
-  const [selectOptions, setSelectOptions] = React.useState([{"id": 1, "name": "placeholder1"}, {"id": 2, "name": "placeholder2"}]);
+  const [selectSetCategories, setSelectSetCategories] = React.useState([{"id": 1, "name": "placeholder1"}, {"id": 2, "name": "placeholder2"}]);
+  const [selectedItems, setSelectedItems] = React.useState([]);
   const [isUploading, setIsUploading] = React.useState(false);
   const [mealId, setMealId] = React.useState('');
+  // select dish modal
+  const [isDishModalOpen, setIsDishModalOpen] = React.useState(false);
+  const [activeItemCategory, setActiveItemCategory] = React.useState(0);
+  const [itemCategories, setItemCategories] = React.useState([]);
+  const [isTabLoaded, setIsTabLoaded] = React.useState(false);
+  const [itemsData, setItemsData] = React.useState([]);
+  const [modalSelectedItems, setModalSelectedItems] = React.useState([]);
+
   // file upload
   const [fileUploaded, setFileUploaded] = React.useState(false);
   const [imageUrl, setImageUrl] = React.useState("");
@@ -290,6 +304,41 @@ export default function SetMeals() {
     }
   },[imageUrl]);
 
+  React.useEffect(() => {
+    if(activeItemCategory !== 0) {
+      setIsTabLoaded(false);
+      queryDishList({categoryId: activeItemCategory})
+        .then(res=> {
+          if (String(res.code) === '1') {
+            // if item in selectedList, make it tick
+            setItemsData(res.data.map((item) => ({...item, selected: modalSelectedItems.some((it)=>(it.id === item.id))})));
+            setIsTabLoaded(true);
+          } else {
+            alert(res.msg || 'Action failed')
+          }
+        }).catch(err => {
+          alert('Error occured.')
+          console.log(err)
+        })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeItemCategory]);
+
+  React.useEffect(() => {
+    const selectedItemsData = itemsData
+                                .filter((item) => (item.selected))
+                                .map((item)=>({'name': item.name, 'id': item.id, 'price': item.price, 'copies': 1}));
+
+    setModalSelectedItems((items)=>
+                                // select unique
+                                // the first filter removes items if not selected in current list
+                                [...items.filter((prevSelected)=>(!itemsData.some(item=>(item.id===prevSelected.id && !item.selected)))), ...selectedItemsData]
+                                  .filter((item, index, self)=>(
+                                    index === self.findIndex(it=>item.id === it.id)
+                                  )));
+  }, [itemsData]);
+
+
   function initPage() {
     getSetmealPage({'page': 1, 'pageSize': 100}).then(res => {
       if (String(res.code) === '1') {
@@ -306,9 +355,14 @@ export default function SetMeals() {
 
   // modal functions
   function openModal() {
-    fetchCategoryList();
+    fetchSetCategoryList();
     setErrorMessage("");
     setIsOpen(true);
+  }
+
+  function openDishModal() {
+    fetchItemCategoryList();
+    setIsDishModalOpen(true);
   }
 
   function resetForm() {
@@ -327,10 +381,28 @@ export default function SetMeals() {
     resetForm();
   }
 
-  function fetchCategoryList() {
+  function closeDishModal() {
+    setIsDishModalOpen(false);
+    setModalSelectedItems([]);
+    setActiveItemCategory(0);
+  }
+
+  function fetchSetCategoryList() {
     getCategoryList({ 'type': 2 }).then(res => {
       if (res.code === 1) {
-        setSelectOptions(res.data)
+        setSelectSetCategories(res.data)
+      } else {
+        alert("fetch category list error")
+        console.error(res.msg || 'action failed.')
+      }
+    })
+  }
+
+  function fetchItemCategoryList() {
+    getCategoryList({ 'type': 1 }).then(res => {
+      if (res.code === 1) {
+        setItemCategories(res.data);
+        setActiveItemCategory(res.data[0].id);
       } else {
         alert("fetch category list error")
         console.error(res.msg || 'action failed.')
@@ -439,6 +511,51 @@ export default function SetMeals() {
       console.error('request error: ' + err)
     })
   }
+
+  // Modal select dish
+  const itemsHasAny = Boolean(itemsData.length);
+  const itemsHasAll = itemsHasAny && itemsData.every((x) => x.selected);
+  const itemsHasSome = itemsHasAny && itemsData.some((x) => x.selected);
+
+  function itemsToggleAll() {
+    setItemsData((itemsData) =>
+      itemsData.map((row) => ({
+        ...row,
+        selected: !itemsHasAll,
+      })),
+    );
+  }
+  function itemsToggle(event) {
+    const {name, checked} = event.currentTarget; // name is id
+    setItemsData((itemsData) =>
+      itemsData.map((row) => ({
+        ...row,
+        selected: String(row.id) === name ? checked : row.selected,
+      })),
+    );
+  }
+
+  function removeModalItem(itemId) {
+    setItemsData((itemsData) =>
+      itemsData.map((row) => ({
+        ...row,
+        selected: row.id === itemId ? false : row.selected,
+      })),
+    );
+    setModalSelectedItems((modalSelectedItems)=>(
+      modalSelectedItems.filter((row) => (row.id !== itemId))
+    ));
+  }
+
+  function removeSelectedItem(itemId) {
+    setSelectedItems((selectedItems)=>(
+      selectedItems.filter((row) => (row.id !== itemId))
+    ));
+  }
+
+  function saveItemSelection() {
+    setSelectedItems(modalSelectedItems);
+  }
   
   return (
     <div className="menu-items-container">
@@ -483,7 +600,7 @@ export default function SetMeals() {
                       label={() => "Set Category"}
                     >
                       <Select
-                        options={selectOptions}
+                        options={selectSetCategories}
                         labelKey="name"
                         valueKey="id"
                         onChange={({value}) => {console.log(value); setSelectValue(value)}}
@@ -506,30 +623,39 @@ export default function SetMeals() {
                   </FormControl>
                 </div>
 
-                {/* <div>
+                <div>
                   <FormControl
-                    label={() => "Item Flavors"}
-                    caption={() => "Add flavor and enter attributes"}
+                    label={() => "Set Items"}
+                    caption={() => "Select menu items that belong to this set."}
                   >
                     <>
-                      {flavorList.map((flavor, currentIndex)=>
-                        (
-                          <FlavorInput
-                            flavorName={flavor['name']}
-                            flavorTags={flavor['value']}
-                            deleteFlavorCallback={()=> {
-                              deleteFlavor(currentIndex);
-                            }}
-                            setNameCallback={(name)=>{
-                              setFlavorNameByIndex(currentIndex, name);
-                            }}
-                            setTagsCallback={(value)=>{
-                              setFlavorValueByIndex(currentIndex, value);
-                            }}
-                            key={currentIndex}
-                          />
-                        )
-                      )}
+                      <ul  className={css({
+                        paddingLeft: 0,
+                        paddingRight: 0,
+                      })}>
+                        {selectedItems.map((item)=>(
+                          <ListItem
+                            shape={SHAPE.ROUND}
+                            endEnhancer={()=>(
+                            <Button size="compact" kind="secondary" shape="round" type="button"
+                              onClick={
+                                () => {
+                                  removeSelectedItem(item.id)
+                                }
+                              } ><Delete /></Button>
+                          )}
+                          >
+                            <ListItemLabel
+                              description={new Intl.NumberFormat('en-US', {
+                                    style: 'currency',
+                                    currency: 'EUR',
+                                  }).format(item.price/100)}
+                            >
+                              {item.name}
+                            </ListItemLabel>
+                          </ListItem>
+                        ))}
+                      </ul>
                       
                       <Button
                         size={SIZE.compact}
@@ -537,15 +663,16 @@ export default function SetMeals() {
                         type="button"
                         onClick={(event)=>{
                           event.preventDefault();
-                          addFlavor();
+                          setModalSelectedItems(selectedItems);
+                          openDishModal();
                         }}
                         startEnhancer={()=> <Plus size={18} />}
                       >
-                        Add New Flavor
+                        Add Item
                       </Button>
                     </>
                   </FormControl>
-                </div> */}
+                </div>
 
                 <div>
                   <FormControl
@@ -617,6 +744,138 @@ export default function SetMeals() {
               </ModalFooter>
             </form>
         </Modal>
+        <Modal
+            onClose={closeDishModal}
+            isOpen={isDishModalOpen}
+            overrides={{
+              Dialog: {
+                style: {
+                  width: '70vw',
+                  minHeight: '75vh',
+                  display: 'flex',
+                  flexDirection: 'column'
+                },
+              },
+            }}
+          >
+            <ModalHeader>Add Item</ModalHeader>
+            <ModalBody style={{display: "flex"}}>
+              <>
+                {/* {selectCategories.map((category)=>(<div>{category.name}</div>))} */}
+                <Tabs
+                  activeKey={activeItemCategory}
+                  onChange={({activeKey}) => {setActiveItemCategory(activeKey)}}
+                  orientation={ORIENTATION.vertical}
+                  // fill={FILL.fixed}
+                  overrides={{
+                    Root: {
+                      style: ({ $theme }) => ({
+                        flex: "2"
+                      })
+                    }
+                  }}
+                >
+                  {itemCategories.map((category)=>(
+                    <Tab key={category.id} title={category.name}>
+                      {
+                        // itemsData.map((item)=>(item.name))
+                        (<TableBuilder data={itemsData} compact
+                          isLoading={!isTabLoaded}
+                          overrides={{
+                            Root: {
+                              style: {
+                              },
+                            },
+
+                          }}>
+                          <TableBuilderColumn
+                            overrides={{
+                              TableHeadCell: {style: {width: '1%'}},
+                              TableBodyCell: {style: {width: '1%'}},
+                            }}
+                            header={
+                              <Checkbox
+                                checked={itemsHasAll}
+                                isIndeterminate={!itemsHasAll && itemsHasSome}
+                                onChange={itemsToggleAll}
+                              />
+                            }
+                          >
+                            {(row) => (
+                              <Checkbox
+                                name={'' + row.id}
+                                checked={row.selected}
+                                onChange={itemsToggle}
+                              />
+                            )}
+                          </TableBuilderColumn>
+
+                          <TableBuilderColumn header="Item Name">
+                            {(row) => (<div>{row.name}</div>)}
+                          </TableBuilderColumn>
+                          <TableBuilderColumn header="Price" numeric>
+                            {(row) => (<div>{new Intl.NumberFormat('en-US', {
+                                style: 'currency',
+                                currency: 'EUR',
+                              }).format(row.price/100)}</div>)}
+                          </TableBuilderColumn>
+                        </TableBuilder>)
+                      }
+                    </Tab>
+                  ))}
+                </Tabs>
+                <div style={{flex: "1", margin: theme.sizing.scale550}}>
+                  Selected Items:
+                  <ul  className={css({
+                    paddingLeft: 0,
+                    paddingRight: 0,
+                  })}>
+                    {modalSelectedItems.map((item)=>(
+                      <ListItem
+                        shape={SHAPE.ROUND}
+                        endEnhancer={()=>(
+                          <Button size="compact" kind="secondary" shape="round" type="button"
+                            onClick={
+                              () => {
+                                removeModalItem(item.id)
+                                console.log(item.id)
+                              }
+                            } ><Delete /></Button>
+                        )}
+                      >
+                        <ListItemLabel
+                          description={new Intl.NumberFormat('en-US', {
+                                style: 'currency',
+                                currency: 'EUR',
+                              }).format(item.price/100)}
+                        >
+                          {item.name}
+                        </ListItemLabel>
+                      </ListItem>
+                    ))}
+                  </ul>
+                </div>
+              </>
+            </ModalBody>
+            <ModalFooter>
+              <ModalButton
+                kind="tertiary"
+                onClick={() => {
+                  closeDishModal();
+                }}
+              >
+                Cancel
+              </ModalButton>
+              <ModalButton
+                onClick={() => {
+                  saveItemSelection();
+                  closeDishModal();
+                }}
+              >
+                Save
+              </ModalButton>
+            </ModalFooter>
+          </Modal>
     </div>
   );
 }
