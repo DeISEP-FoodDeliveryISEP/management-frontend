@@ -243,7 +243,7 @@ function SetMealTable({data, editCallback = () => {}, deleteCallback = () => {},
       </TableBuilderColumn>
 
       <TableBuilderColumn header="Set Price">
-        {row => <SetPriceCell value={row.price} />}
+        {row => <SetPriceCell value={row.price/100} />}
       </TableBuilderColumn>
 
       <TableBuilderColumn header="Last Edited">
@@ -459,7 +459,9 @@ export default function SetMeals() {
       'description': mealDescription,
       'code': '',
       'categoryId': selectValue[0].id,
-      'setmealDishes': []
+      'setmealDishes': selectedItems.map((menuItem)=>
+        ({'name': menuItem.name, 'price': menuItem.price, 'dishId': menuItem.id, 'copies': menuItem.copies})
+      )
     };
     if (modalAction === 'add') {
       reqBody['status'] = 1; // set activated if add
