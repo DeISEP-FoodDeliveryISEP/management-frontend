@@ -11,8 +11,11 @@ import {Button, KIND, SIZE} from 'baseui/button';
 import {useStyletron} from 'baseui';
 import { 
     getDishPage, addDish, deleteDish, getCategoryList
-    , imageUpload, dishStatusByStatus, queryDishById
+    , dishStatusByStatus, queryDishById
     , editDish } from "../api/menuItems";
+import {
+  imageUpload
+} from '../api/common';
 import {Checkbox, STYLE_TYPE} from 'baseui/checkbox';
 import { Select } from "baseui/select";
 import {
@@ -29,48 +32,6 @@ import { FormControl } from 'baseui/form-control';
 import TagInput from "../components/TagInput";
 import { Plus } from "baseui/icon";
 import { formatImageLink } from "../common/utils";
-
-const DISH = {
-    "categoryId": 0,
-    "categoryName": "SouthEast",
-    "code": "",
-    "copies": 0,
-    "createTime": "2023-05-10 13:59:59",
-    "createUser": 0,
-    "description": "This is some description.",
-    "flavors": [
-        {
-            "createTime": "",
-            "createUser": 0,
-            "dishId": 12,
-            "id": 0,
-            "isDeleted": 0,
-            "name": "salty",
-            "updateTime": "",
-            "updateUser": 0,
-            "value": ""
-        },
-        {
-            "createTime": "",
-            "createUser": 0,
-            "dishId": 12,
-            "id": 1,
-            "isDeleted": 0,
-            "name": "seasoned",
-            "updateTime": "",
-            "updateUser": 0,
-            "value": ""
-        }
-    ],
-    "id": 12,
-    "image": "https://media.istockphoto.com/id/851493796/fr/photo/gros-plan-du-sandwich-kebab.jpg?s=612x612&w=0&k=20&c=c7ONnq-rtvRlsb3dLmw8K8M9dsewME_XotYGSOzI2Bs=",
-    "name": "Kebab",
-    "price": 6.9,
-    "sort": 0,
-    "status": 1,
-    "updateTime": "2023-05-10 13:59:59",
-    "updateUser": 0
-};
 
 function DishContentCell({src, title, description}) {
   const [css, theme] = useStyletron();
@@ -247,9 +208,6 @@ function MenuItemTable({data, editCallback = () => {}, deleteCallback = () => {}
         {row => <PriceCell value={row.price} />}
       </TableBuilderColumn>
 
-      {/* <TableBuilderColumn header="Flavors">
-        {row => <FlavorsCell flavors={row.flavors} />}
-      </TableBuilderColumn> */}
 
       <TableBuilderColumn header="Last Edited">
         {row => <LastEditedDateCell date={row.updateTime} />}
@@ -257,7 +215,6 @@ function MenuItemTable({data, editCallback = () => {}, deleteCallback = () => {}
 
       <TableBuilderColumn header="Status">
         {row => <StatusCell id={row.id} status={row.status} reloadCallback={reloadCallback} />}
-        {/* {row => row.status ? "activated" : "deactivated"} */}
       </TableBuilderColumn>
 
       <TableBuilderColumn header="Actions">
@@ -310,7 +267,7 @@ function FlavorInput({flavorName, flavorTags, deleteFlavorCallback, setNameCallb
 
 export default function MenuItems() {
   const [css, theme] = useStyletron();
-  const [data, setData] = React.useState(Array.from(new Array(5)).fill(DISH));
+  const [data, setData] = React.useState([]);
   const [isLoaded, setIsLoaded] = React.useState(false);
 
   // modal
@@ -349,7 +306,6 @@ export default function MenuItems() {
       if (String(res.code) === '1') {
         setData(res.data.records)
         setIsLoaded(true)
-        // this.counts = Number(res.data.total)
       } else {
         alert(res.msg || 'Action failed')
       }
