@@ -11,6 +11,16 @@ import {DatePicker} from 'baseui/datepicker';
 import {addDays} from 'date-fns';
 import {Button, KIND, SIZE} from 'baseui/button';
 import { editOrderDetail, queryOrderDetailById, getOrderDetailPage} from "../api/order";
+import { FormControl } from 'baseui/form-control';
+import {
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalButton,
+  ROLE
+} from 'baseui/modal';
+import { StarRating } from "baseui/rating";
 
 const ORDER = {
   "address": "21 Rue de Vanves, PARIS 75012",
@@ -158,7 +168,7 @@ function ReceivedAmountCell({receivedAmount}) {
 }
 
 
-function ButtonsCell({data={'id': 0}, editCallback=()=>{}}) {
+function ButtonsCell({data={'id': 0}, detailsCallback=()=>{}}) {
   const [css, theme] = useStyletron();
 
   return (
@@ -173,7 +183,7 @@ function ButtonsCell({data={'id': 0}, editCallback=()=>{}}) {
                 },
               },
             }}
-            onClick={() => editCallback(data.id)}
+            onClick={() => {}}
           >
             Deliver
           </Button>
@@ -187,7 +197,7 @@ function ButtonsCell({data={'id': 0}, editCallback=()=>{}}) {
                 },
               },
             }}
-            onClick={() => {}}
+            onClick={() => {detailsCallback(data)}}
           >
             Details
           </Button>
@@ -195,7 +205,7 @@ function ButtonsCell({data={'id': 0}, editCallback=()=>{}}) {
   );
 }
 
-function CustomerOrdersTable({data=[]}) {
+function CustomerOrdersTable({data=[], detailsCallback=()=>{}}) {
   return (
     <TableBuilder
       overrides={{Root: {style: {maxHeight: '600px'}}}}
@@ -262,6 +272,7 @@ function CustomerOrdersTable({data=[]}) {
         {row => (
           <ButtonsCell
             data={row}
+            detailsCallback={detailsCallback}
           />
         )}
       </TableBuilderColumn>
@@ -280,6 +291,24 @@ export default function CustomerOrders() {
   ]);
   const [data, setData] = React.useState([]);
   const [isLoaded, setIsLoaded] = React.useState(false);
+
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [orderDetail, setOrderDetail] = React.useState({});
+
+  function openDetailsModal() {
+    setIsOpen(true);
+  }
+
+  function detailsCallback(details) {
+    console.log(details);
+    setOrderDetail(details);
+    openDetailsModal();
+  }
+
+  function close() {
+    setIsOpen(false);
+  }
+
 
   React.useEffect(() => {
     initPage()
@@ -326,7 +355,103 @@ export default function CustomerOrders() {
           />
           <Button onClick={() => alert("click")}>Search</Button>
         </div>
-        <CustomerOrdersTable data={data}/>
+        <CustomerOrdersTable data={data} detailsCallback={detailsCallback}/>
+        <Modal
+          onClose={() => setIsOpen(false)}
+          closeable
+          isOpen={isOpen}
+          animate
+          autoFocus
+          size={SIZE.default}
+          role={ROLE.dialog}
+        >
+          <ModalHeader>Order Details</ModalHeader>
+          <ModalBody>
+            <div style={{display: "flex", justifyContent: "start", alignItems: "begin"}}>
+              <div style={{marginRight: "4rem"}}>
+                <FormControl
+                label={() => "Customer Name"}
+              >
+                {/* <span>{orderDetail.consignee}</span> */}
+                <span>Ian Lee</span>
+              </FormControl>
+              </div>
+              <div>
+                <FormControl
+                label={() => "Phone Number"}
+              >
+                <span>{orderDetail.phone}</span>
+              </FormControl>
+              </div>
+            </div>
+
+            <FormControl
+              label={() => "Delivery Address"}
+            >
+              <span>{orderDetail.address}</span>
+            </FormControl>
+            <div style={{display: "flex", justifyContent: "start", alignItems: "begin"}}>
+              <div style={{marginRight: "4rem"}}>
+                <FormControl
+                  label={() => "Order Number"}
+                >
+                  <span>{orderDetail?.number}</span>
+                </FormControl>
+              </div>
+            <div>
+              <FormControl
+                label={() => "Order Status"}
+              >
+                {/* <span>{orderDetail?.status === 2 ? 'To be delivered.' : 'Delivered.'}</span> */}
+                <div>Delivered.</div>
+              </FormControl>
+            </div>
+            </div>
+
+            <FormControl
+              label={() => "Order Time"}
+            >
+              <span>{orderDetail.orderTime}</span>
+            </FormControl>
+
+            <FormControl
+              label={() => "Order Details"}
+            >
+            <div>
+              {orderDetail?.orderDetail?.map((dish)=>(
+                <div>
+                  <b>{dish.name}</b> x {dish.number}
+                </div>
+              ))}
+            </div>
+              
+            </FormControl>
+
+            <FormControl
+              label={() => "Total Price"}
+            >
+              <span>{orderDetail.amount}</span>
+            </FormControl>
+
+            <FormControl
+              label={() => "Rating"}
+            >
+              <StarRating
+                  value={4.5}
+                  readOnly
+              />
+            </FormControl>
+
+            <FormControl
+              label={() => "Comments"}
+            >
+              <div>Excellent punctuality and awesome kebab! Definitely would order next time.</div>
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <ModalButton onClick={close}>Close</ModalButton>
+          </ModalFooter>
+        </Modal>
     </div>
   );
 }
