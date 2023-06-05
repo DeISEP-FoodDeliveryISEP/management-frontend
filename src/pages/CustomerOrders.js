@@ -9,7 +9,8 @@ import { Input } from "baseui/input";
 import * as React from "react";
 import {DatePicker} from 'baseui/datepicker';
 import {addDays} from 'date-fns';
-import { Button } from "baseui/button";
+import {Button, KIND, SIZE} from 'baseui/button';
+import { editOrderDetail, queryOrderDetailById, getOrderDetailPage} from "../api/order";
 
 const ORDER = {
   "address": "21 Rue de Vanves, PARIS 75012",
@@ -156,11 +157,49 @@ function ReceivedAmountCell({receivedAmount}) {
   );
 }
 
-function CustomerOrdersTable() {
+
+function ButtonsCell({data={'id': 0}, editCallback=()=>{}}) {
+  const [css, theme] = useStyletron();
+
+  return (
+    <div className={css({display: 'flex', alignItems: 'center'})}>
+          <Button
+            
+            size={SIZE.mini}
+            overrides={{
+              BaseButton: {
+                style: {
+                  marginLeft: 0,
+                },
+              },
+            }}
+            onClick={() => editCallback(data.id)}
+          >
+            Deliver
+          </Button>
+          <Button
+            kind={KIND.secondary}
+            size={SIZE.mini}
+            overrides={{
+              BaseButton: {
+                style: {
+                  marginLeft: theme.sizing.scale100,
+                },
+              },
+            }}
+            onClick={() => {}}
+          >
+            Details
+          </Button>
+    </div>
+  );
+}
+
+function CustomerOrdersTable({data=[]}) {
   return (
     <TableBuilder
       overrides={{Root: {style: {maxHeight: '600px'}}}}
-      data={ORDERDATA}
+      data={data}
     >
 
       <TableBuilderColumn header="Order Number">
@@ -182,7 +221,7 @@ function CustomerOrdersTable() {
       <TableBuilderColumn header="Username">
         {row => (
           <UserCell
-            username={row.userName}
+            username={row.userName ? row.userName : "Jon Lin"}
           />
         )}
       </TableBuilderColumn>
@@ -211,10 +250,18 @@ function CustomerOrdersTable() {
         )}
       </TableBuilderColumn>
 
-      <TableBuilderColumn header="Received Amount">
+      <TableBuilderColumn header="Amount">
         {row => (
           <ReceivedAmountCell
             receivedAmount={row.amount}
+          />
+        )}
+      </TableBuilderColumn>
+
+      <TableBuilderColumn header="Action">
+        {row => (
+          <ButtonsCell
+            data={row}
           />
         )}
       </TableBuilderColumn>
@@ -231,6 +278,26 @@ export default function CustomerOrders() {
     new Date(),
     addDays(new Date(), 4),
   ]);
+  const [data, setData] = React.useState([]);
+  const [isLoaded, setIsLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    initPage()
+  }, []);
+
+  function initPage() {
+    getOrderDetailPage({'page': 1, 'pageSize': 100}).then(res => {
+      if (String(res.code) === '1') {
+        setData(res.data.records)
+        setIsLoaded(true)
+      } else {
+        alert(res.msg || 'Action failed')
+      }
+    }).catch(err => {
+      alert('Error occured.')
+      console.log(err)
+    })
+  }
 
   return (
     <div className="menu-items-container">
@@ -259,7 +326,7 @@ export default function CustomerOrders() {
           />
           <Button onClick={() => alert("click")}>Search</Button>
         </div>
-        <CustomerOrdersTable />
+        <CustomerOrdersTable data={data}/>
     </div>
   );
 }
