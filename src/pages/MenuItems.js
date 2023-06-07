@@ -33,6 +33,7 @@ import TagInput from "../components/TagInput";
 import { Plus } from "baseui/icon";
 import { formatImageLink } from "../common/utils";
 import { toaster } from "baseui/toast";
+import { Loading } from "../components/Loading";
 
 function DishContentCell({src, title, description}) {
   const [css, theme] = useStyletron();
@@ -151,14 +152,13 @@ function ButtonsCell({data, editCallback, deleteCallback}) {
 }
 
 function StatusCell({id, status, reloadCallback}) {
-  const [localStatus, setLocalStatus] = React.useState(status);
+  // const [localStatus, setLocalStatus] = React.useState(status);
 
   return (
     <Checkbox
-        checked={localStatus}
+        checked={status === 1}
         onChange={e => {
           const val = e.currentTarget.checked;
-          setLocalStatus(val);
           const newStatus = val === true ? 1 : 0;
           dishStatusByStatus({id: id, status: newStatus})
             .then((res)=> {
@@ -302,6 +302,7 @@ export default function MenuItems() {
   },[imageUrl]);
 
   function initPage() {
+    setIsLoaded(false);
     getDishPage({'page': 1, 'pageSize': 100}).then(res => {
       if (String(res.code) === '1') {
         setData(res.data.records)
@@ -509,7 +510,7 @@ export default function MenuItems() {
         {/* <Button>Edit</Button>
         <Button>Delete</Button> */}
         </ButtonGroup>
-        {isLoaded ? <MenuItemTable data={data} editCallback={setEditModal} deleteCallback={handleDelete} reloadCallback={initPage} /> : <div>Loading...</div>}
+        {isLoaded ? <MenuItemTable data={data} editCallback={setEditModal} deleteCallback={handleDelete} reloadCallback={initPage} /> : <Loading></Loading>}
 
         {/* Add New Item Modal */}
         <Modal 

@@ -189,14 +189,11 @@ function ButtonsCell({data={'id': 0}, editCallback=()=>{}, deleteCallback=()=>{}
 }
 
 function StatusCell({id, status, reloadCallback=()=>{}}) {
-  const [localStatus, setLocalStatus] = React.useState(status);
-
   return (
     <Checkbox
-        checked={localStatus}
+        checked={status === 1}
         onChange={e => {
           const val = e.currentTarget.checked;
-          setLocalStatus(val);
           const newStatus = val === true ? 1 : 0;
           setmealStatusByStatus({id: id, status: newStatus})
             .then((res)=> {
