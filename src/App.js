@@ -15,6 +15,8 @@ import SetMeals from "./pages/SetMeals";
 import EditCategories from "./pages/EditCategories";
 import CustomerOrders from "./pages/CustomerOrders";
 import NoMatch from "./pages/NoMatch";
+
+import { ToasterContainer } from 'baseui/toast';
 const engine = new Styletron();
 
 function App() {
@@ -56,6 +58,7 @@ function Layout() {
           so you can think about this <Outlet> as a placeholder for
           the child routes we defined above. */}
       <Outlet />
+      <ToasterContainer autoHideDuration={4000}></ToasterContainer>
     </>
   );
 }

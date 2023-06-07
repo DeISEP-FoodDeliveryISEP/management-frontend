@@ -20,7 +20,7 @@ import {
 import { FormControl } from 'baseui/form-control';
 import { Input } from 'baseui/input';
 import { deleCategory, getCategoryPage, addCategory, editCategory } from '../api/category';
-
+import { toaster } from "baseui/toast";
 const ADD = 1;
 const EDIT = 2;
 
@@ -193,11 +193,11 @@ export default function EditCategories() {
         setIsLoaded(true)
         // this.counts = Number(res.data.total)
       } else {
-        alert(res.msg || 'Action failed')
+        toaster.warning(<>Error: {res.msg || 'Action failed.'}</>);
       }
     }).catch(err => {
-      alert('Error occured.')
-      console.log(err)
+      toaster.negative(<>{'Error occured:' + err}</>)
+      console.error(err)
     })
   }
 
@@ -223,15 +223,15 @@ export default function EditCategories() {
       addCategory(reqBody).then(res => {
         console.log(res)
         if (res.code === 1) {
-          alert('add success!')
+          toaster.positive(<>add success!</>)
           initPage()
           close()
         } else {
-          alert('add error')
-          console.log(res.msg || 'action failed')
+          toaster.warning(<>{res.msg || 'action failed.'}</>)
+          console.error(res.msg || 'action failed')
         }
       }).catch(err => {
-        alert('request error')
+        toaster.negative(<>{'Error occured:' + err}</>)
         console.log('request error: ' + err)
       })
     }
@@ -239,15 +239,15 @@ export default function EditCategories() {
       const reqBody = {'id': editID, 'name': categoryName, 'sort': order};
       editCategory(reqBody).then(res => {
         if (res.code === 1) {
-          alert('edit success!')
+          toaster.positive(<>edit success!</>)
           close()
           initPage()
         } else {
-          alert('add error')
+          toaster.warning(<>{res.msg || 'action failed'}</>)
           console.log(res.msg || 'action failed')
         }
       }).catch(err => {
-        alert('request error')
+        toaster.negative(<>{'Error occured:' + err}</>)
         console.log('request error: ' + err)
       });
     }
@@ -258,13 +258,14 @@ export default function EditCategories() {
     if (window.confirm("This action deletes the category, proceed?")) {
       deleCategory(deleteId).then(res => {
         if (res.code === 1) {
-          alert('Delete success!')
+          toaster.positive(<>Delete success!</>)
           initPage()
         } else {
-          alert("delete failed, message: " + res.msg)
+          toaster.warning(<>{"delete failed, message: " + res.msg}</>)
         }
       }).catch(err => {
-        alert('Request failed: ' + err)
+        toaster.negative(<>{'Error occured:' + err}</>)
+        console.error('Error occured:' + err)
       })
     }
   }

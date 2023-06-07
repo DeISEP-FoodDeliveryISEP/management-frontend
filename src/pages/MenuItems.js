@@ -32,6 +32,7 @@ import { FormControl } from 'baseui/form-control';
 import TagInput from "../components/TagInput";
 import { Plus } from "baseui/icon";
 import { formatImageLink } from "../common/utils";
+import { toaster } from "baseui/toast";
 
 function DishContentCell({src, title, description}) {
   const [css, theme] = useStyletron();
@@ -162,15 +163,14 @@ function StatusCell({id, status, reloadCallback}) {
           dishStatusByStatus({id: id, status: newStatus})
             .then((res)=> {
               if (res.code === 1) {
-                alert('status change success');
+                toaster.positive("status change success");
                 reloadCallback();
               }
               else {
-                alert('server side error');
-                console.error(res.msg);
+                toaster.warning(<>{res.msg || 'Action failed'}</>);
               }
             }).catch(err => {
-              alert('request error:' + err)
+              toaster.negative('error:' + err)
             })
           reloadCallback();
         }}
@@ -307,10 +307,10 @@ export default function MenuItems() {
         setData(res.data.records)
         setIsLoaded(true)
       } else {
-        alert(res.msg || 'Action failed')
+        toaster.warning(<>{res.msg || 'Action failed'}</>)
       }
     }).catch(err => {
-      alert('Error occured.')
+      toaster.negative(<>{'Error occured: ' + err}</>)
       console.log(err)
     })
   }
@@ -344,7 +344,7 @@ export default function MenuItems() {
       if (res.code === 1) {
         setSelectOptions(res.data)
       } else {
-        alert("fetch category list error")
+        toaster.warning(<>{res.msg || 'action failed'}</>)
         console.error(res.msg || 'action failed.')
       }
     })
@@ -370,10 +370,10 @@ export default function MenuItems() {
     imageUpload(file[0])
       .then(res => {
         // handleImageUploadSuccess(res);
-         if (res.code === 0 && res.msg === '未登录')
-          alert("not login!");
+         if (res.code === 0 && res.msg === 'NOTLOGIN')
+          toaster.warning("not login!");
         else if (res.code === 0){
-          alert("upload error: handleImageUpload failed");
+          toaster.warning("upload error: handleImageUpload failed");
         }
         else {
           // console.log('response is:', res.data);
@@ -387,8 +387,8 @@ export default function MenuItems() {
       })
       .catch(err => {
         setErrorMessage("File upload failed.");
-        alert('Error occured.');
-        console.log(err);
+        toaster.negative('Error occured. ' + err);
+        console.error(err);
     });
   }
 
@@ -408,16 +408,14 @@ export default function MenuItems() {
       addDish(reqBody).then(res => {
         console.log(res)
         if (res.code === 1) {
-          alert('add success!')
+          toaster.positive('add success!')
           initPage()
           close()
         } else {
-          alert('add error')
-          console.log(res.msg || 'action failed')
+          toaster.warning(<>{res.msg || 'action failed'}</>)
         }
       }).catch(err => {
-        alert('request error')
-        console.log('request error: ' + err)
+        toaster.negative('request error: ' + err)
       })
     }
     else {
@@ -425,16 +423,15 @@ export default function MenuItems() {
       editDish(reqBody).then(res => {
         console.log(res)
         if (res.code === 1) {
-          alert('edit success!')
+          toaster.positive('edit success!')
           initPage()
           close()
         } else {
-          alert('edit error')
+          toaster.warning(<>{res.msg || 'action failed'}</>)
           console.log(res.msg || 'action failed')
         }
       }).catch(err => {
-        alert('request error')
-        console.log('request error: ' + err)
+        toaster.negative('request error: ' + err)
       })
     }
     
@@ -443,14 +440,13 @@ export default function MenuItems() {
   function handleDelete(deleteId, mode = 'single') {
     deleteDish(mode === 'batch' ? deleteList.join(',') : deleteId).then(res => {
       if (res.code === 1) {
-        alert('delete success!')
+        toaster.positive('delete success!')
         initPage()
       } else {
-        alert('delete failed.')
-        console.error(res.msg || 'al')
+        toaster.warning('delete failed. ' + res.msg)
       }
     }).catch(err => {
-      console.error('request error: ' + err)
+      toaster.negative('request error: ' + err)
     })
   }
 
@@ -497,11 +493,11 @@ export default function MenuItems() {
           openModal();
         }
         else {
-          alert(res.msg || 'Action failed');
+          toaster.warning(res.msg || 'Action failed');
         }
       })
       .catch(err => {
-        alert('request error:' + err);
+        toaster.negative('request error:' + err);
       })
   }
 

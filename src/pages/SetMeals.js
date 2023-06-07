@@ -40,6 +40,7 @@ import {
   ListItem,
   ListItemLabel
 } from "baseui/list";
+import { toaster } from "baseui/toast";
 
 const SET = {
   "categoryId": 0,
@@ -200,15 +201,14 @@ function StatusCell({id, status, reloadCallback=()=>{}}) {
           setmealStatusByStatus({id: id, status: newStatus})
             .then((res)=> {
               if (res.code === 1) {
-                alert('status change success');
+                toaster.positive('status change success');
                 reloadCallback();
               }
               else {
-                alert('server side error');
-                console.error(res.msg);
+                toaster.warning(res.msg || "Action failed");
               }
             }).catch(err => {
-              alert('request error:' + err)
+              toaster.negative('request error:' + err);
             })
           reloadCallback();
         }}
@@ -314,10 +314,10 @@ export default function SetMeals() {
             setItemsData(res.data.map((item) => ({...item, selected: modalSelectedItems.some((it)=>(it.id === item.id))})));
             setIsTabLoaded(true);
           } else {
-            alert(res.msg || 'Action failed')
+            toaster.warning(res.msg || 'Action failed')
           }
         }).catch(err => {
-          alert('Error occured.')
+          toaster.negative('Error occured.')
           console.log(err)
         })
     }
@@ -340,15 +340,16 @@ export default function SetMeals() {
 
 
   function initPage() {
+    setIsLoaded(false)
     getSetmealPage({'page': 1, 'pageSize': 100}).then(res => {
       if (String(res.code) === '1') {
         setData(res.data.records)
         setIsLoaded(true)
       } else {
-        alert(res.msg || 'Action failed')
+        toaster.warning(res.msg || 'Action failed')
       }
     }).catch(err => {
-      alert('Error occured.')
+      toaster.negative('Error occured.' + err)
       console.log(err)
     })
   }
@@ -392,7 +393,7 @@ export default function SetMeals() {
       if (res.code === 1) {
         setSelectSetCategories(res.data)
       } else {
-        alert("fetch category list error")
+        toaster.warning(res.msg || 'action failed.')
         console.error(res.msg || 'action failed.')
       }
     })
@@ -404,7 +405,7 @@ export default function SetMeals() {
         setItemCategories(res.data);
         setActiveItemCategory(res.data[0].id);
       } else {
-        alert("fetch category list error")
+        toaster.warning(res.msg || 'action failed.')
         console.error(res.msg || 'action failed.')
       }
     })
@@ -429,9 +430,9 @@ export default function SetMeals() {
       .then(res => {
         // handleImageUploadSuccess(res);
          if (res.code === 0 && res.msg === '未登录')
-          alert("not login!");
+          toaster.negative("not login!");
         else if (res.code === 0){
-          alert("upload error: handleImageUpload failed");
+          toaster.warning("upload error: handleImageUpload failed");
         }
         else {
           // console.log('response is:', res.data);
@@ -445,7 +446,7 @@ export default function SetMeals() {
       })
       .catch(err => {
         setErrorMessage("File upload failed.");
-        alert('Error occured.');
+        toaster.negative('Error occured.' + err);
         console.log(err);
     });
   }
@@ -468,15 +469,15 @@ export default function SetMeals() {
       addSetmeal(reqBody).then(res => {
         console.log(res)
         if (res.code === 1) {
-          alert('add success!')
+          toaster.positive('add success!')
           initPage()
           close()
         } else {
-          alert('add error')
+          toaster.warning(res.msg || 'action failed')
           console.log(res.msg || 'action failed')
         }
       }).catch(err => {
-        alert('request error')
+        toaster.negative('request error: ' + err)
         console.log('request error: ' + err)
       })
     }
@@ -503,13 +504,14 @@ export default function SetMeals() {
   function handleDelete(deleteId, mode = 'single') {
     deleteSetmeal(mode === 'batch' ? deleteList.join(',') : deleteId).then(res => {
       if (res.code === 1) {
-        alert('delete success!')
+        toaster.positive('delete success!')
         initPage()
       } else {
-        alert('delete failed.')
+        toaster.warning(res.msg || 'action failed')
         console.error(res.msg || 'al')
       }
     }).catch(err => {
+      toaster.negative('request error:' + err)
       console.error('request error: ' + err)
     })
   }

@@ -6,6 +6,7 @@ import { Input } from "baseui/input";
 import { Button } from "baseui/button";
 import { useNavigate } from "react-router-dom";
 import { loginApi } from "../api/login";
+import { toaster } from "baseui/toast";
 
 export default function Login() {
     const [css] = useStyletron();
@@ -28,7 +29,7 @@ export default function Login() {
             localStorage.setItem('userInfo',JSON.stringify(res.data))
             navigate("/");
         } else {
-            alert(res.msg);
+            toaster.warning(res.msg);
         }
     }
     

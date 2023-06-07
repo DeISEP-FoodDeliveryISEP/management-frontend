@@ -21,6 +21,7 @@ import {
   ROLE
 } from 'baseui/modal';
 import { StarRating } from "baseui/rating";
+import { toaster } from "baseui/toast";
 
 const ORDER = {
   "address": "21 Rue de Vanves, PARIS 75012",
@@ -320,10 +321,10 @@ export default function CustomerOrders() {
         setData(res.data.records)
         setIsLoaded(true)
       } else {
-        alert(res.msg || 'Action failed')
+        toaster.warning(res.msg || 'Action failed')
       }
     }).catch(err => {
-      alert('Error occured.')
+      toaster.negative('Error occured.')
       console.log(err)
     })
   }
@@ -353,7 +354,7 @@ export default function CustomerOrders() {
               flexGrow: "2"
             })}
           />
-          <Button onClick={() => alert("click")}>Search</Button>
+          <Button onClick={() => toaster.info("click")}>Search</Button>
         </div>
         <CustomerOrdersTable data={data} detailsCallback={detailsCallback}/>
         <Modal
