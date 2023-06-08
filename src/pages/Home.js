@@ -37,8 +37,20 @@ export default function Home() {
       <h1><span style={{color: "#FFD643"}}>De</span>ISEP Management Portal</h1>
       <div
         style={{marginBottom: "2rem"}}
-      >This is the DeISEP management system portal. Here, you can customize, edit menu items, and also manage customer orders.</div>
+      >This is the DeISEP management system portal. Customize and manage your menu and orders.
+        Here are some tips:
+        <ol>
+          <li>Create a category first, each menu item or set must belong to a category.</li>
+          <li>Menu items and sets have separate lists of categories.</li>
+        </ol></div>
       <div className="card-container">
+        <PortalCard
+          title="Category Management"
+          buttonLink="edit-categories"
+          description="Edit and add categories for menu items."
+          buttonText="Go"
+          >
+        </PortalCard>
         <PortalCard
           title="Menu Items"
           buttonLink="menu-items"
@@ -50,13 +62,6 @@ export default function Home() {
           title="Set Meals"
           buttonLink="set-meals"
           description="Set meals are menu item sets that can group different menu items. Add, edit or delete set meals."
-          buttonText="Go"
-          >
-        </PortalCard>
-        <PortalCard
-          title="Category Management"
-          buttonLink="edit-categories"
-          description="Edit and add categories for menu items."
           buttonText="Go"
           >
         </PortalCard>
