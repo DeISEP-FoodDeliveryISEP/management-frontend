@@ -22,6 +22,8 @@ import {
 } from 'baseui/modal';
 import { StarRating } from "baseui/rating";
 import { toaster } from "baseui/toast";
+import { checkNotLogin } from "../common/utils";
+import { useNavigate } from "react-router-dom";
 
 const ORDER = {
   "address": "21 Rue de Vanves, PARIS 75012",
@@ -296,6 +298,9 @@ export default function CustomerOrders() {
   const [isOpen, setIsOpen] = React.useState(false);
   const [orderDetail, setOrderDetail] = React.useState({});
 
+  // navigate
+  const navigate = useNavigate();
+
   function openDetailsModal() {
     setIsOpen(true);
   }
@@ -317,6 +322,7 @@ export default function CustomerOrders() {
 
   function initPage() {
     getOrderDetailPage({'page': 1, 'pageSize': 100}).then(res => {
+      checkNotLogin(res, navigate);
       if (String(res.code) === '1') {
         setData(res.data.records)
         setIsLoaded(true)

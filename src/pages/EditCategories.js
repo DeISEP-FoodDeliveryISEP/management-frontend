@@ -5,36 +5,23 @@ import {
   TableBuilder,
   TableBuilderColumn,
 } from 'baseui/table-semantic';
-import {Avatar} from 'baseui/avatar';
 import {Button, KIND, SIZE} from 'baseui/button';
-import {Tag} from 'baseui/tag';
 import {useStyletron} from 'baseui';
 import {
   Modal,
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalButton,
-  ROLE
+  ModalButton
 } from 'baseui/modal';
 import { FormControl } from 'baseui/form-control';
 import { Input } from 'baseui/input';
 import { deleCategory, getCategoryPage, addCategory, editCategory } from '../api/category';
 import { toaster } from "baseui/toast";
+import { checkNotLogin } from '../common/utils';
+import { useNavigate } from 'react-router-dom';
 const ADD = 1;
 const EDIT = 2;
-
-// temp data
-const DATA1 = {
-  "createTime": "2023-05-10 13:59:59",
-  "createUser": 0,
-  "id": 0,
-  "name": "East Asian",
-  "sort": 1,
-  "type": 1,
-  "updateTime": "2023-05-17 13:59:59",
-  "updateUser": 0
-};
 
 function CategoryCell({category}) {
   const [css, theme] = useStyletron();
@@ -172,9 +159,10 @@ export default function EditCategories() {
   const [modalTitle, setModalTitle] = React.useState("");
   const [newCatType, setNewCatType] = React.useState("1");
   const [isLoaded, setIsLoaded] = React.useState(false);
-  const [data, setData] = React.useState(Array.from(new Array(5)).fill(DATA1));
+  const [data, setData] = React.useState([]);
   const [addOrEdit, setAddOrEdit] = React.useState(ADD); // 1 for add, 2 for edit
   const [editID, setEditID] = React.useState(0);
+  const navigate = useNavigate();
   
   React.useEffect(() => {
      initPage()
@@ -187,7 +175,9 @@ export default function EditCategories() {
   }
 
   function initPage() {
+    setIsLoaded(false);
     getCategoryPage({'page': 1, 'pageSize': 100}).then(res => {
+      checkNotLogin(res, navigate);
       if (String(res.code) === '1') {
         setData(res.data.records)
         setIsLoaded(true)
@@ -221,7 +211,7 @@ export default function EditCategories() {
     if (addOrEdit === ADD) {
       const reqBody = {'name': categoryName,'type': newCatType, 'sort': order};
       addCategory(reqBody).then(res => {
-        console.log(res)
+        checkNotLogin(res, navigate);
         if (res.code === 1) {
           toaster.positive(<>add success!</>)
           initPage()
@@ -238,6 +228,7 @@ export default function EditCategories() {
     else if (addOrEdit === EDIT) {
       const reqBody = {'id': editID, 'name': categoryName, 'sort': order};
       editCategory(reqBody).then(res => {
+        checkNotLogin(res, navigate);
         if (res.code === 1) {
           toaster.positive(<>edit success!</>)
           close()
@@ -257,6 +248,7 @@ export default function EditCategories() {
     const deleteId = data.id;
     if (window.confirm("This action deletes the category, proceed?")) {
       deleCategory(deleteId).then(res => {
+        checkNotLogin(res, navigate);
         if (res.code === 1) {
           toaster.positive(<>Delete success!</>)
           initPage()
@@ -286,7 +278,8 @@ export default function EditCategories() {
           <Button onClick={() => {setAddOrEdit(() => ADD); openModal("menu-item");}}>+ New Menu Item Category</Button>
           <Button onClick={() => {setAddOrEdit(() => ADD); openModal("set-meals");}}>+ New Set Meals Category</Button>
         </ButtonGroup>
-        <CategoryTable data={data} editCallback={handleEdit} deleteCallback={handleDelete}/>
+        { isLoaded ? <CategoryTable data={data} editCallback={handleEdit} deleteCallback={handleDelete}/> : 'Loading...'}
+        
 
         {/* Add New Category Modal */}
         <Modal onClose={close} isOpen={isOpen}>

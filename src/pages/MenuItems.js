@@ -34,6 +34,8 @@ import { Plus } from "baseui/icon";
 import { formatImageLink } from "../common/utils";
 import { toaster } from "baseui/toast";
 import { Loading } from "../components/Loading";
+import { checkNotLogin } from '../common/utils';
+import { useNavigate } from 'react-router-dom';
 
 function DishContentCell({src, title, description}) {
   const [css, theme] = useStyletron();
@@ -151,7 +153,7 @@ function ButtonsCell({data, editCallback, deleteCallback}) {
   );
 }
 
-function StatusCell({id, status, reloadCallback}) {
+function StatusCell({id, status, reloadCallback, navigate }) {
   // const [localStatus, setLocalStatus] = React.useState(status);
 
   return (
@@ -162,6 +164,7 @@ function StatusCell({id, status, reloadCallback}) {
           const newStatus = val === true ? 1 : 0;
           dishStatusByStatus({id: id, status: newStatus})
             .then((res)=> {
+              checkNotLogin(res, navigate);
               if (res.code === 1) {
                 toaster.positive("status change success");
                 reloadCallback();
@@ -172,7 +175,7 @@ function StatusCell({id, status, reloadCallback}) {
             }).catch(err => {
               toaster.negative('error:' + err)
             })
-          reloadCallback();
+          // reloadCallback();
         }}
         checkmarkType={STYLE_TYPE.toggle_round}
       />
@@ -180,7 +183,7 @@ function StatusCell({id, status, reloadCallback}) {
 }
 
 
-function MenuItemTable({data, editCallback = () => {}, deleteCallback = () => {}, reloadCallback = () => {}}) {
+function MenuItemTable({data, editCallback = () => {}, deleteCallback = () => {}, reloadCallback = () => {}, navigate}) {
   return (
     <TableBuilder
       overrides={{Root: {style: {maxHeight: '600px'}}}}
@@ -214,7 +217,7 @@ function MenuItemTable({data, editCallback = () => {}, deleteCallback = () => {}
       </TableBuilderColumn>
 
       <TableBuilderColumn header="Status">
-        {row => <StatusCell id={row.id} status={row.status} reloadCallback={reloadCallback} />}
+        {row => <StatusCell id={row.id} status={row.status} reloadCallback={reloadCallback} navigate={navigate} />}
       </TableBuilderColumn>
 
       <TableBuilderColumn header="Actions">
@@ -287,6 +290,8 @@ export default function MenuItems() {
   const [imageUploadUrl, setImageUploadUrl] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
   const [deleteList, setDeleteList] = React.useState([]);
+  // router
+  const navigate = useNavigate();
 
 
   React.useEffect(() => {
@@ -304,6 +309,7 @@ export default function MenuItems() {
   function initPage() {
     setIsLoaded(false);
     getDishPage({'page': 1, 'pageSize': 100}).then(res => {
+      checkNotLogin(res, navigate);
       if (String(res.code) === '1') {
         setData(res.data.records)
         setIsLoaded(true)
@@ -342,6 +348,7 @@ export default function MenuItems() {
 
   function fetchCategoryList() {
     getCategoryList({ 'type': 1 }).then(res => {
+      checkNotLogin(res, navigate);
       if (res.code === 1) {
         setSelectOptions(res.data)
       } else {
@@ -370,6 +377,7 @@ export default function MenuItems() {
     startProgress();
     imageUpload(file[0])
       .then(res => {
+        checkNotLogin(res, navigate);
         // handleImageUploadSuccess(res);
          if (res.code === 0 && res.msg === 'NOTLOGIN')
           toaster.warning("not login!");
@@ -407,6 +415,7 @@ export default function MenuItems() {
     if (modalAction === 'add') {
       reqBody['status'] = 1; // set activated if add
       addDish(reqBody).then(res => {
+        checkNotLogin(res, navigate);
         console.log(res)
         if (res.code === 1) {
           toaster.positive('add success!')
@@ -422,6 +431,7 @@ export default function MenuItems() {
     else {
       reqBody['id'] = itemId;
       editDish(reqBody).then(res => {
+        checkNotLogin(res, navigate);
         console.log(res)
         if (res.code === 1) {
           toaster.positive('edit success!')
@@ -440,6 +450,7 @@ export default function MenuItems() {
 
   function handleDelete(deleteId, mode = 'single') {
     deleteDish(mode === 'batch' ? deleteList.join(',') : deleteId).then(res => {
+      checkNotLogin(res, navigate);
       if (res.code === 1) {
         toaster.positive('delete success!')
         initPage()
@@ -477,6 +488,7 @@ export default function MenuItems() {
     setModalAction('edit');
     queryDishById(itemId)
       .then((res)=>{
+        checkNotLogin(res, navigate);
         if(res.code === 1) {
           const {id, name, price, image, description, flavors, categoryId } = res.data;
           setFileUploaded(true);
@@ -510,7 +522,7 @@ export default function MenuItems() {
         {/* <Button>Edit</Button>
         <Button>Delete</Button> */}
         </ButtonGroup>
-        {isLoaded ? <MenuItemTable data={data} editCallback={setEditModal} deleteCallback={handleDelete} reloadCallback={initPage} /> : <Loading></Loading>}
+        {isLoaded ? <MenuItemTable data={data} editCallback={setEditModal} deleteCallback={handleDelete} reloadCallback={initPage} navigate={navigate} /> : <Loading></Loading>}
 
         {/* Add New Item Modal */}
         <Modal 

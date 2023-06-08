@@ -41,6 +41,8 @@ import {
   ListItemLabel
 } from "baseui/list";
 import { toaster } from "baseui/toast";
+import { checkNotLogin } from '../common/utils';
+import { useNavigate } from 'react-router-dom';
 
 const SET = {
   "categoryId": 0,
@@ -188,7 +190,7 @@ function ButtonsCell({data={'id': 0}, editCallback=()=>{}, deleteCallback=()=>{}
   );
 }
 
-function StatusCell({id, status, reloadCallback=()=>{}}) {
+function StatusCell({id, status, reloadCallback=()=>{}, navigate}) {
   return (
     <Checkbox
         checked={status === 1}
@@ -197,6 +199,7 @@ function StatusCell({id, status, reloadCallback=()=>{}}) {
           const newStatus = val === true ? 1 : 0;
           setmealStatusByStatus({id: id, status: newStatus})
             .then((res)=> {
+              checkNotLogin(res, navigate);
               if (res.code === 1) {
                 toaster.positive('status change success');
                 reloadCallback();
@@ -215,7 +218,7 @@ function StatusCell({id, status, reloadCallback=()=>{}}) {
 }
 
 
-function SetMealTable({data, editCallback = () => {}, deleteCallback = () => {}, reloadCallback = () => {}}) {
+function SetMealTable({data, editCallback = () => {}, deleteCallback = () => {}, reloadCallback = () => {}, navigate}) {
   return (
     <TableBuilder
       overrides={{Root: {style: {maxHeight: '600px'}}}}
@@ -248,7 +251,7 @@ function SetMealTable({data, editCallback = () => {}, deleteCallback = () => {},
       </TableBuilderColumn>
 
       <TableBuilderColumn header="Status">
-        {row => <StatusCell id={row.id} status={row.status} reloadCallback={reloadCallback} />}
+        {row => <StatusCell id={row.id} status={row.status} reloadCallback={reloadCallback} navigate={navigate}/>}
       </TableBuilderColumn>
 
       <TableBuilderColumn header="Actions">
@@ -288,6 +291,9 @@ export default function SetMeals() {
   const [imageUploadUrl, setImageUploadUrl] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
   const [deleteList, setDeleteList] = React.useState([]);
+
+  // NOT LOGIN
+  const navigate = useNavigate();
   
   React.useEffect(() => {
     initPage()
@@ -306,6 +312,7 @@ export default function SetMeals() {
       setIsTabLoaded(false);
       queryDishList({categoryId: activeItemCategory})
         .then(res=> {
+          checkNotLogin(res, navigate);
           if (String(res.code) === '1') {
             // if item in selectedList, make it tick
             setItemsData(res.data.map((item) => ({...item, selected: modalSelectedItems.some((it)=>(it.id === item.id))})));
@@ -339,6 +346,7 @@ export default function SetMeals() {
   function initPage() {
     setIsLoaded(false)
     getSetmealPage({'page': 1, 'pageSize': 100}).then(res => {
+      checkNotLogin(res, navigate);
       if (String(res.code) === '1') {
         setData(res.data.records)
         setIsLoaded(true)
@@ -387,6 +395,7 @@ export default function SetMeals() {
 
   function fetchSetCategoryList() {
     getCategoryList({ 'type': 2 }).then(res => {
+      checkNotLogin(res, navigate);
       if (res.code === 1) {
         setSelectSetCategories(res.data)
       } else {
@@ -398,6 +407,7 @@ export default function SetMeals() {
 
   function fetchItemCategoryList() {
     getCategoryList({ 'type': 1 }).then(res => {
+      checkNotLogin(res, navigate);
       if (res.code === 1) {
         setItemCategories(res.data);
         setActiveItemCategory(res.data[0].id);
@@ -425,6 +435,7 @@ export default function SetMeals() {
     startProgress();
     imageUpload(file[0])
       .then(res => {
+        checkNotLogin(res, navigate);
         // handleImageUploadSuccess(res);
          if (res.code === 0 && res.msg === '未登录')
           toaster.negative("not login!");
@@ -464,6 +475,7 @@ export default function SetMeals() {
     if (modalAction === 'add') {
       reqBody['status'] = 1; // set activated if add
       addSetmeal(reqBody).then(res => {
+        checkNotLogin(res, navigate);
         console.log(res)
         if (res.code === 1) {
           toaster.positive('add success!')
@@ -500,6 +512,7 @@ export default function SetMeals() {
 
   function handleDelete(deleteId, mode = 'single') {
     deleteSetmeal(mode === 'batch' ? deleteList.join(',') : deleteId).then(res => {
+      checkNotLogin(res, navigate);
       if (res.code === 1) {
         toaster.positive('delete success!')
         initPage()
@@ -565,7 +578,7 @@ export default function SetMeals() {
         <Button onClick={() => {openModal();}}>+ New</Button>
         </ButtonGroup>
         {/* SetMeal Table */}
-        {isLoaded ? <SetMealTable data={data} editCallback={()=>{}} deleteCallback={handleDelete} reloadCallback={initPage} /> : <div>Loading...</div>}
+        {isLoaded ? <SetMealTable data={data} editCallback={()=>{}} deleteCallback={handleDelete} reloadCallback={initPage} navigate={navigate}/> : <div>Loading...</div>}
 
 
         {/* Add New Item Modal */}
