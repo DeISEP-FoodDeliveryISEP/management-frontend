@@ -39,7 +39,7 @@ export const addSetmeal = (params) => {
 // query setmeal detail
 export const querySetmealById = (id) => {
   return $axios({
-    url: `/setmeal/${id}`,
+    url: `/setmeal/listById?id=${id}`,
     method: 'get'
   })
 }

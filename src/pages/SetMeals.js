@@ -224,7 +224,7 @@ function SetMealTable({data, editCallback = () => {}, deleteCallback = () => {},
       overrides={{Root: {style: {maxHeight: '600px'}}}}
       data={data}
     >
-      <TableBuilderColumn header="Set Item">
+      <TableBuilderColumn header="Set Meal">
         {row => (
           <SetItemContentCell
             src={formatImageLink(row.image)}
@@ -357,11 +357,11 @@ export default function SetMeals() {
       toaster.negative('Error occured.' + err)
       console.log(err)
     })
+    fetchSetCategoryList();
   }
 
   // modal functions
   function openModal() {
-    fetchSetCategoryList();
     setErrorMessage("");
     setIsOpen(true);
   }
@@ -374,8 +374,10 @@ export default function SetMeals() {
   function resetForm() {
     setFileUploaded(false);
     setImageUrl("");
+    setImageUploadUrl("");
     setErrorMessage("");
     setSelectValue([]);
+    setSelectedItems([]);
     setMealName("");
     setMealPrice("");
     setMealDescription("");
@@ -570,6 +572,36 @@ export default function SetMeals() {
   function saveItemSelection() {
     setSelectedItems(modalSelectedItems);
   }
+
+  function setEditModal(itemId) {
+    setModalAction('edit');
+    querySetmealById(itemId)
+      .then((res)=>{
+        checkNotLogin(res, navigate);
+        if(res.code === 1) {
+          const {id, name, price, image, description, setmealDishes, categoryId } = res.data;
+          setMealId(id);
+          setFileUploaded(true);
+          setImageUrl(formatImageLink(image));
+          setImageUploadUrl(image);
+          setErrorMessage("");
+          setSelectValue(selectSetCategories.filter((cat)=>(cat.id === categoryId))); // set category
+          setSelectedItems(setmealDishes.map((menuItem) =>
+            ({'name': menuItem.name, 'price': menuItem.price, 'id': menuItem.dishId, 'copies': menuItem.copies})));
+          setMealName(name);
+          setMealPrice(price/100); // divide by 100
+          setMealDescription(description);
+          setModalAction('edit');
+          openModal();
+        }
+        else {
+          toaster.warning(res.msg || 'Action failed');
+        }
+      })
+      .catch(err => {
+        toaster.negative('request error:' + err);
+      })
+  }
   
   return (
     <div className="menu-items-container">
@@ -578,7 +610,7 @@ export default function SetMeals() {
         <Button onClick={() => {openModal();}}>+ New</Button>
         </ButtonGroup>
         {/* SetMeal Table */}
-        {isLoaded ? <SetMealTable data={data} editCallback={()=>{}} deleteCallback={handleDelete} reloadCallback={initPage} navigate={navigate}/> : <div>Loading...</div>}
+        {isLoaded ? <SetMealTable data={data} editCallback={setEditModal} deleteCallback={handleDelete} reloadCallback={initPage} navigate={navigate}/> : <div>Loading...</div>}
 
 
         {/* Add New Item Modal */}
