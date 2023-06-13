@@ -6,7 +6,7 @@ import { Input } from "baseui/input";
 import { Button } from "baseui/button";
 import { useNavigate } from "react-router-dom";
 import { loginApi } from "../api/login";
-import { toaster } from "baseui/toast";
+import { ToasterContainer, toaster } from "baseui/toast";
 
 export default function Login() {
     const [css] = useStyletron();
@@ -35,6 +35,7 @@ export default function Login() {
     
     return (
         <div className={css(loginContainerCSS)}>
+            <ToasterContainer autoHideDuration={4000}></ToasterContainer>
             <Card overrides={{Root: {style: {width: '420px'}}}}>
                 <StyledBody className={css({display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", textAlign: "center"})}>
                     <h1 style={{fontSize: "2rem"}}><span style={{color: "#FFD643"}}>De</span>ISEP <br/> Management System</h1>

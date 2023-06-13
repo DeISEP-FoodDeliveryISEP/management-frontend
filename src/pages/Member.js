@@ -177,7 +177,7 @@ export default function Member() {
   async function handleSubmit(event) {
     event.preventDefault();
     if (addOrEdit === ADD) {
-      const reqBody = {'name': name,'username': username, 'phone': phone};
+      const reqBody = {'name': name,'username': username, 'phone': phone, 'sex': 1, 'idNumber': 0};
       addEmployee(reqBody).then(res => {
         checkNotLogin(res, navigate);
         if (res.code === 1) {
