@@ -17,6 +17,7 @@ import CustomerOrders from "./pages/CustomerOrders";
 import NoMatch from "./pages/NoMatch";
 
 import { ToasterContainer } from 'baseui/toast';
+import Member from './pages/Member';
 const engine = new Styletron();
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
             <Route path="/set-meals" element={<SetMeals />}/>
             <Route path="/edit-categories" element={<EditCategories />}/>
             <Route path="/customer-orders" element={<CustomerOrders />}/>
+            <Route path="/member" element={<Member />} />
           </Route>
 
           {/* Using path="*"" means "match anything", so this route
@@ -73,7 +75,6 @@ function HomeLayout() {
         <Outlet />
       </div>
     </div>
-    
   );
 }
 

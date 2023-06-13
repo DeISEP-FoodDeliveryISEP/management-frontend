@@ -2,6 +2,7 @@ import * as React from "react";
 import { Navigation } from "baseui/side-navigation";
 import {useLocation, useNavigate} from 'react-router-dom';
 import { BiReceipt, BiFoodMenu, BiCategory, BiDish } from "react-icons/bi";
+import { AiOutlineUser } from "react-icons/ai";
 
 const SideBar = () => {
     const navigate = useNavigate();
@@ -36,6 +37,14 @@ const SideBar = () => {
             Customer Orders
           </div>,
           itemId: "/customer-orders"
+        },
+        {
+          title:
+          <div style={{display: "flex", alignItems: "center"}}>
+            <AiOutlineUser size={18} style={{marginRight: "9px"}}/>
+            Users Management
+          </div>,
+          itemId: "/member"
         }
       ]}
       activeItemId={location.pathname}
